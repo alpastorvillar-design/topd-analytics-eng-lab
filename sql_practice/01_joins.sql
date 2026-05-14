@@ -1,18 +1,12 @@
 ﻿-- =============================================================================
--- 01_joins.sql  ·  JOINs en BigQuery
+-- 01_joins.sql  ·  JOINs aplicados al modelo de datos MediConnect
 -- =============================================================================
--- Patrones de JOIN aplicados al modelo de datos de MediConnect.
--- Sustituye `project.dataset` por tu proyecto real.
--- =============================================================================
-
--- ─────────────────────────────────────────────────────────────────────────────
--- TIPOS DE JOIN
 -- INNER JOIN  → sólo filas con coincidencia en ambas tablas
--- LEFT JOIN   → todas las filas de la izquierda + coincidencias (NULL si no hay)
--- FULL OUTER  → todas las filas de ambas tablas
--- CROSS JOIN  → producto cartesiano
--- BigQuery y PostgreSQL comparten la misma sintaxis.
--- ─────────────────────────────────────────────────────────────────────────────
+-- LEFT JOIN   → todas las filas de la izquierda, NULL si no hay match
+-- FULL OUTER  → todas las filas de ambas tablas (útil para detectar gaps)
+-- SELF JOIN   → tabla unida consigo misma para comparar filas del mismo grupo
+-- Anti-join   → LEFT JOIN + WHERE right.key IS NULL (más robusto que NOT IN)
+-- =============================================================================
 
 -- 1. INNER JOIN: citas con nombre de paciente y médico
 SELECT
@@ -21,9 +15,9 @@ SELECT
     a.status,
     p.full_name   AS patient_name,
     d.full_name   AS doctor_name
-FROM `project.dbt_marts.fct_appointments`    AS a
-INNER JOIN `project.dbt_marts.dim_patients`  AS p USING (patient_id)
-INNER JOIN `project.dbt_marts.dim_doctors`   AS d USING (doctor_id)
+FROM `topd-lab.dbt_marts.fct_appointments`    AS a
+INNER JOIN `topd-lab.dbt_marts.dim_patients`  AS p USING (patient_id)
+INNER JOIN `topd-lab.dbt_marts.dim_doctors`   AS d USING (doctor_id)
 WHERE a.appointment_date >= '2023-01-01'
 LIMIT 100;
 
@@ -36,8 +30,8 @@ SELECT
     d.full_name,
     d.specialty_id,
     COUNT(a.appointment_id)  AS completed_appointments
-FROM `project.dbt_marts.dim_doctors` AS d
-LEFT JOIN `project.dbt_marts.fct_appointments` AS a
+FROM `topd-lab.dbt_marts.dim_doctors` AS d
+LEFT JOIN `topd-lab.dbt_marts.fct_appointments` AS a
     ON  d.doctor_id = a.doctor_id
     AND a.status    = 'completed'
 GROUP BY d.doctor_id, d.full_name, d.specialty_id
@@ -49,8 +43,8 @@ SELECT
     pay.payment_id,
     pay.appointment_id,
     pay.amount_cents
-FROM `project.dbt_marts.fct_payments` AS pay
-LEFT JOIN `project.dbt_marts.fct_appointments` AS a
+FROM `topd-lab.dbt_marts.fct_payments` AS pay
+LEFT JOIN `topd-lab.dbt_marts.fct_appointments` AS a
     USING (appointment_id)
 WHERE a.appointment_id IS NULL;
 
@@ -61,14 +55,14 @@ WITH daily_appts AS (
     SELECT
         appointment_date               AS date,
         COUNT(*)                       AS total_appointments
-    FROM `project.dbt_marts.fct_appointments`
+    FROM `topd-lab.dbt_marts.fct_appointments`
     GROUP BY appointment_date
 ),
 daily_payments AS (
     SELECT
         payment_date                   AS date,
         SUM(amount_eur)                AS total_revenue_eur
-    FROM `project.dbt_marts.fct_payments`
+    FROM `topd-lab.dbt_marts.fct_payments`
     WHERE payment_status = 'paid'
     GROUP BY payment_date
 )
@@ -89,8 +83,8 @@ SELECT
     a2.appointment_id       AS repeat_visit,
     a1.appointment_start_at AS first_date,
     a2.appointment_start_at AS repeat_date
-FROM `project.dbt_marts.fct_appointments` AS a1
-JOIN `project.dbt_marts.fct_appointments` AS a2
+FROM `topd-lab.dbt_marts.fct_appointments` AS a1
+JOIN `topd-lab.dbt_marts.fct_appointments` AS a2
     ON  a1.patient_id = a2.patient_id
     AND a1.doctor_id  = a2.doctor_id
     AND a1.appointment_start_at < a2.appointment_start_at
@@ -110,10 +104,10 @@ SELECT
         SUM(p.amount_eur),
         COUNT(DISTINCT a.patient_id)
     )                                   AS revenue_per_patient
-FROM `project.dbt_marts.fct_appointments`   AS a
-JOIN `project.dbt_marts.fct_payments`       AS p   USING (appointment_id)
-JOIN `project.dbt_marts.dim_specialties`    AS s   USING (specialty_id)
-JOIN `project.dbt_marts.dim_countries`      AS c   ON c.country_id = a.country_id
+FROM `topd-lab.dbt_marts.fct_appointments`   AS a
+JOIN `topd-lab.dbt_marts.fct_payments`       AS p   USING (appointment_id)
+JOIN `topd-lab.dbt_marts.dim_specialties`    AS s   USING (specialty_id)
+JOIN `topd-lab.dbt_marts.dim_countries`      AS c   ON c.country_id = a.country_id
 WHERE p.payment_status = 'paid'
 GROUP BY s.specialty_name, c.country_name
 ORDER BY total_revenue_eur DESC;

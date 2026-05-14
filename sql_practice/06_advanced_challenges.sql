@@ -1,4 +1,4 @@
--- =============================================================================
+﻿-- =============================================================================
 -- 06_advanced_challenges.sql  ·  Retos SQL avanzados
 -- =============================================================================
 -- Queries complejas que combinan múltiples técnicas: window functions,
@@ -15,9 +15,9 @@ WITH doctor_revenue AS (
         d.specialty_id,
         s.specialty_name,
         SUM(p.amount_eur)  AS total_revenue_eur
-    FROM `project.dbt_marts.fct_payments`        AS p
-    JOIN `project.dbt_marts.dim_doctors`         AS d USING (doctor_id)
-    JOIN `project.dbt_marts.dim_specialties`     AS s USING (specialty_id)
+    FROM `topd-lab.dbt_marts.fct_payments`        AS p
+    JOIN `topd-lab.dbt_marts.dim_doctors`         AS d USING (doctor_id)
+    JOIN `topd-lab.dbt_marts.dim_specialties`     AS s USING (specialty_id)
     WHERE p.payment_status = 'paid'
     GROUP BY p.doctor_id, d.full_name, d.specialty_id, s.specialty_name
 )
@@ -29,7 +29,7 @@ QUALIFY RANK() OVER (PARTITION BY specialty_id ORDER BY total_revenue_eur DESC) 
 -- 2. Segundo médico más activo de cada país (variante N-ésimo mayor)
 WITH doctor_activity AS (
     SELECT doctor_id, country_id, COUNT(*) AS total_appointments
-    FROM `project.dbt_marts.fct_appointments`
+    FROM `topd-lab.dbt_marts.fct_appointments`
     WHERE status = 'completed'
     GROUP BY doctor_id, country_id
 )
@@ -41,12 +41,12 @@ ORDER BY country_id;
 
 -- 3. Pacientes activos en enero que no tuvieron cita en febrero
 WITH january AS (
-    SELECT DISTINCT patient_id FROM `project.dbt_marts.fct_appointments`
+    SELECT DISTINCT patient_id FROM `topd-lab.dbt_marts.fct_appointments`
     WHERE appointment_date BETWEEN '2024-01-01' AND '2024-01-31'
       AND status = 'completed'
 ),
 february AS (
-    SELECT DISTINCT patient_id FROM `project.dbt_marts.fct_appointments`
+    SELECT DISTINCT patient_id FROM `topd-lab.dbt_marts.fct_appointments`
     WHERE appointment_date BETWEEN '2024-02-01' AND '2024-02-28'
       AND status = 'completed'
 )
@@ -61,7 +61,7 @@ SELECT
     COUNT(*)                                            AS appointments,
     SUM(COUNT(*)) OVER ()                               AS total_appointments,
     ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) AS pct_of_total
-FROM `project.dbt_marts.fct_appointments`
+FROM `topd-lab.dbt_marts.fct_appointments`
 GROUP BY channel
 ORDER BY appointments DESC;
 
@@ -72,14 +72,14 @@ WITH funnel AS (
         DATE_TRUNC(created_at, MONTH)           AS month,
         COUNT(*)                                AS total_leads,
         COUNTIF(lead_status = 'converted')      AS converted_leads
-    FROM `project.dbt_marts.fct_leads`
+    FROM `topd-lab.dbt_marts.fct_leads`
     GROUP BY month
 ),
 payments_per_month AS (
     SELECT
         DATE_TRUNC(payment_date, MONTH)         AS month,
         COUNTIF(payment_status = 'paid')        AS paid_appointments
-    FROM `project.dbt_marts.fct_payments`
+    FROM `topd-lab.dbt_marts.fct_payments`
     GROUP BY month
 )
 SELECT
@@ -98,7 +98,7 @@ ORDER BY f.month;
 -- 6. Pacientes que volvieron dentro de los 90 días de su primera cita
 WITH first_appointments AS (
     SELECT patient_id, MIN(appointment_date) AS first_date
-    FROM `project.dbt_marts.fct_appointments`
+    FROM `topd-lab.dbt_marts.fct_appointments`
     WHERE status = 'completed'
     GROUP BY patient_id
 ),
@@ -111,7 +111,7 @@ has_return AS (
             MIN(a.appointment_date), f.first_date, DAY
         ) <= 90                     AS returned_within_90_days
     FROM first_appointments AS f
-    LEFT JOIN `project.dbt_marts.fct_appointments` AS a
+    LEFT JOIN `topd-lab.dbt_marts.fct_appointments` AS a
         ON  a.patient_id     = f.patient_id
         AND a.appointment_date > f.first_date
         AND a.status         = 'completed'
@@ -147,7 +147,7 @@ SELECT DISTINCT
              THEN 'at_risk'
         ELSE 'churned'
     END                                                  AS patient_segment
-FROM `project.dbt_marts.fct_appointments`
+FROM `topd-lab.dbt_marts.fct_appointments`
 WHERE status = 'completed'
 ORDER BY days_since_last_visit DESC;
 
@@ -156,13 +156,13 @@ ORDER BY days_since_last_visit DESC;
 WITH doctor_completed AS (
     SELECT doctor_id, specialty_id,
            COUNTIF(status = 'completed') AS doc_completed
-    FROM `project.dbt_marts.fct_appointments`
+    FROM `topd-lab.dbt_marts.fct_appointments`
     GROUP BY doctor_id, specialty_id
 ),
 specialty_total AS (
     SELECT specialty_id,
            COUNTIF(status = 'completed') AS spec_completed
-    FROM `project.dbt_marts.fct_appointments`
+    FROM `topd-lab.dbt_marts.fct_appointments`
     GROUP BY specialty_id
 )
 SELECT

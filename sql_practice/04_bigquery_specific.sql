@@ -1,8 +1,8 @@
+﻿-- =============================================================================
+-- 04_bigquery_specific.sql  ·  BigQuery vs PostgreSQL
 -- =============================================================================
--- 04_bigquery_specific.sql  ·  Features específicos de BigQuery
--- =============================================================================
--- Funciones y sintaxis exclusivos de BigQuery (o con comportamiento diferente
--- respecto a PostgreSQL). Útil como referencia rápida.
+-- COUNTIF, SAFE_DIVIDE, QUALIFY, DATE_TRUNC/DIFF, GENERATE_DATE_ARRAY,
+-- UNNEST, partition pruning, IF, FORMAT_DATE — equivalentes PG incluidos.
 -- =============================================================================
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -14,7 +14,7 @@ SELECT
     COUNTIF(status = 'completed')               AS completed,
     COUNTIF(status = 'no_show')                 AS no_show,
     COUNTIF(is_first_appointment = TRUE)        AS new_patients
-FROM `project.dbt_marts.fct_appointments`
+FROM `topd-lab.dbt_marts.fct_appointments`
 GROUP BY month;
 
 -- PostgreSQL equivalente:
@@ -33,7 +33,7 @@ SELECT
     SAFE_DIVIDE(
         COUNTIF(status = 'completed'), COUNT(*)
     )                                           AS completion_rate
-FROM `project.dbt_marts.fct_appointments`
+FROM `topd-lab.dbt_marts.fct_appointments`
 GROUP BY specialty_id;
 
 -- PostgreSQL:  completed::numeric / NULLIF(total, 0)
@@ -48,8 +48,8 @@ WITH doctor_rev AS (
         d.doctor_id,
         d.specialty_id,
         SUM(p.amount_eur) AS revenue_eur
-    FROM `project.dbt_marts.fct_payments`  AS p
-    JOIN `project.dbt_marts.dim_doctors`   AS d USING (doctor_id)
+    FROM `topd-lab.dbt_marts.fct_payments`  AS p
+    JOIN `topd-lab.dbt_marts.dim_doctors`   AS d USING (doctor_id)
     WHERE p.payment_status = 'paid'
     GROUP BY d.doctor_id, d.specialty_id
 )
@@ -72,7 +72,7 @@ SELECT
     -- DATE_DIFF(end, start, unit)
     DATE_DIFF(CURRENT_DATE(), appointment_date, DAY)    AS days_ago,
     DATE_DIFF(CURRENT_DATE(), appointment_date, MONTH)  AS months_ago
-FROM `project.dbt_marts.fct_appointments`
+FROM `topd-lab.dbt_marts.fct_appointments`
 LIMIT 10;
 
 -- PostgreSQL:
@@ -91,7 +91,7 @@ FROM UNNEST(
 
 -- UNNEST también expande arrays a filas:
 SELECT name, tag
-FROM `project.dbt_marts.dim_doctors`
+FROM `topd-lab.dbt_marts.dim_doctors`
 CROSS JOIN UNNEST(tags) AS tag   -- si tags fuera un campo ARRAY<STRING>
 WHERE tags IS NOT NULL;
 
@@ -104,7 +104,7 @@ WHERE tags IS NOT NULL;
 
 -- Esta query sólo escanea las particiones de 2024 → menos bytes → menor coste:
 SELECT COUNT(*), SUM(amount_eur)
-FROM `project.dbt_marts.fct_payments`
+FROM `topd-lab.dbt_marts.fct_payments`
 WHERE payment_date >= '2024-01-01'          -- partition pruning
   AND country_id = 'ES'                     -- clustering benefit
   AND payment_status = 'paid';
@@ -129,8 +129,8 @@ SELECT
     END                                                     AS outcome_label,
     -- Pivot manual con IF:
     IF(status = 'completed', amount_eur, 0)                 AS revenue_if_completed
-FROM `project.dbt_marts.fct_appointments`
-LEFT JOIN `project.dbt_marts.fct_payments` USING (appointment_id)
+FROM `topd-lab.dbt_marts.fct_appointments`
+LEFT JOIN `topd-lab.dbt_marts.fct_payments` USING (appointment_id)
 LIMIT 20;
 
 
@@ -144,5 +144,5 @@ SELECT
     FORMAT_DATE('%Q', appointment_date)         AS quarter_number,   -- '2'
     CONCAT('Q', FORMAT_DATE('%Q', appointment_date),
            '-', FORMAT_DATE('%Y', appointment_date)) AS quarter_label -- 'Q2-2023'
-FROM `project.dbt_marts.fct_appointments`
+FROM `topd-lab.dbt_marts.fct_appointments`
 LIMIT 5;

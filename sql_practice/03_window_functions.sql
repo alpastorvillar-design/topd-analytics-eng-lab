@@ -1,16 +1,8 @@
+﻿-- =============================================================================
+-- 03_window_functions.sql  ·  Window Functions
 -- =============================================================================
--- 03_window_functions.sql  ·  Window Functions en BigQuery
--- =============================================================================
--- Las window functions calculan un valor por fila usando una "ventana" de
--- filas relacionadas, sin colapsar el resultado como GROUP BY.
--- BigQuery y PostgreSQL comparten sintaxis prácticamente idéntica.
---
--- Anatomía:
---   función() OVER (
---       PARTITION BY col   -- divide en grupos sin colapsar
---       ORDER BY col       -- orden dentro de la ventana
---       ROWS BETWEEN ...   -- frame: qué filas incluir
---   )
+-- ROW_NUMBER / RANK / DENSE_RANK, LAG/LEAD, SUM OVER frames, FIRST/LAST_VALUE,
+-- NTILE, QUALIFY. Sin colapsar filas, a diferencia de GROUP BY.
 -- =============================================================================
 
 -- 1. ROW_NUMBER: numerar visitas de cada paciente por fecha
@@ -23,7 +15,7 @@ SELECT
         PARTITION BY patient_id
         ORDER BY appointment_start_at
     )                                       AS visit_number
-FROM `project.dbt_marts.fct_appointments`
+FROM `topd-lab.dbt_marts.fct_appointments`
 WHERE status = 'completed'
 ORDER BY patient_id, visit_number;
 
@@ -39,7 +31,7 @@ SELECT
     RANK()       OVER (PARTITION BY month ORDER BY total_revenue_eur DESC) AS rnk,
     DENSE_RANK() OVER (PARTITION BY month ORDER BY total_revenue_eur DESC) AS dense_rnk,
     ROW_NUMBER() OVER (PARTITION BY month ORDER BY total_revenue_eur DESC) AS row_num
-FROM `project.dbt_marts.executive.agg_specialty_performance`
+FROM `topd-lab.dbt_marts.agg_specialty_performance`
 ORDER BY month, rnk;
 
 
@@ -60,7 +52,7 @@ SELECT
         )),
         DAY
     )                                                       AS days_since_last_visit
-FROM `project.dbt_marts.fct_appointments`
+FROM `topd-lab.dbt_marts.fct_appointments`
 WHERE status = 'completed'
 ORDER BY patient_id, current_appt;
 
@@ -68,7 +60,7 @@ ORDER BY patient_id, current_appt;
 -- 4. SUM OVER: revenue acumulado (running total) y ventana rolling 7 días
 WITH daily AS (
     SELECT payment_date, SUM(amount_eur) AS daily_revenue
-    FROM `project.dbt_marts.fct_payments`
+    FROM `topd-lab.dbt_marts.fct_payments`
     WHERE payment_status = 'paid'
     GROUP BY payment_date
 )
@@ -102,14 +94,14 @@ SELECT DISTINCT
         ORDER BY appointment_start_at
         ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
     )                           AS last_appointment_id
-FROM `project.dbt_marts.fct_appointments`
+FROM `topd-lab.dbt_marts.fct_appointments`
 WHERE status = 'completed';
 
 
 -- 6. NTILE: segmentar médicos en cuartiles por revenue
 WITH doctor_revenue AS (
     SELECT doctor_id, SUM(amount_eur) AS total_revenue
-    FROM `project.dbt_marts.fct_payments`
+    FROM `topd-lab.dbt_marts.fct_payments`
     WHERE payment_status = 'paid'
     GROUP BY doctor_id
 )
@@ -127,7 +119,7 @@ ORDER BY revenue_quartile, total_revenue DESC;
 
 -- Cita más reciente de cada paciente:
 SELECT patient_id, appointment_id, appointment_start_at, status
-FROM `project.dbt_marts.fct_appointments`
+FROM `topd-lab.dbt_marts.fct_appointments`
 QUALIFY ROW_NUMBER() OVER (
     PARTITION BY patient_id
     ORDER BY appointment_start_at DESC
@@ -139,6 +131,6 @@ SELECT
     COUNT(*)                                        AS appointments,
     SUM(COUNT(*)) OVER ()                           AS total_appointments,
     ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) AS pct_of_total
-FROM `project.dbt_marts.fct_appointments`
+FROM `topd-lab.dbt_marts.fct_appointments`
 GROUP BY channel
 ORDER BY appointments DESC;

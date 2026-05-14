@@ -1,8 +1,8 @@
+﻿-- =============================================================================
+-- 02_ctes.sql  ·  CTEs y subqueries
 -- =============================================================================
--- 02_ctes.sql  ·  CTEs y subqueries en BigQuery
--- =============================================================================
--- CTEs (Common Table Expressions): subqueries con nombre que hacen el código
--- modular y reutilizable. Base del estilo de transformación en dbt.
+-- CTE vs subquery anidada, CTEs encadenadas (patrón dbt), NOT EXISTS,
+-- series de fechas con GENERATE_DATE_ARRAY, QUALIFY con subquery inline.
 -- =============================================================================
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -13,7 +13,7 @@
 SELECT doctor_id, total_revenue
 FROM (
     SELECT doctor_id, SUM(amount_eur) AS total_revenue
-    FROM `project.dbt_marts.fct_payments`
+    FROM `topd-lab.dbt_marts.fct_payments`
     WHERE payment_status = 'paid'
     GROUP BY doctor_id
 )
@@ -24,7 +24,7 @@ WITH doctor_revenue AS (
     SELECT
         doctor_id,
         SUM(amount_eur)  AS total_revenue
-    FROM `project.dbt_marts.fct_payments`
+    FROM `topd-lab.dbt_marts.fct_payments`
     WHERE payment_status = 'paid'
     GROUP BY doctor_id
 )
@@ -51,10 +51,10 @@ appointments_enriched AS (
         p.full_name      AS patient_name,
         d.full_name      AS doctor_name,
         s.specialty_name
-    FROM `project.dbt_marts.fct_appointments`   AS a
-    JOIN `project.dbt_marts.dim_patients`       AS p USING (patient_id)
-    JOIN `project.dbt_marts.dim_doctors`        AS d USING (doctor_id)
-    JOIN `project.dbt_marts.dim_specialties`    AS s USING (specialty_id)
+    FROM `topd-lab.dbt_marts.fct_appointments`   AS a
+    JOIN `topd-lab.dbt_marts.dim_patients`       AS p USING (patient_id)
+    JOIN `topd-lab.dbt_marts.dim_doctors`        AS d USING (doctor_id)
+    JOIN `topd-lab.dbt_marts.dim_specialties`    AS s USING (specialty_id)
     WHERE a.status = 'completed'
 ),
 
@@ -75,7 +75,7 @@ doctor_revenue AS (
         a.doctor_id,
         SUM(p.amount_eur)               AS total_revenue_eur
     FROM appointments_enriched          AS a
-    JOIN `project.dbt_marts.fct_payments` AS p USING (appointment_id)
+    JOIN `topd-lab.dbt_marts.fct_payments` AS p USING (appointment_id)
     WHERE p.payment_status = 'paid'
     GROUP BY a.doctor_id
 )
@@ -105,10 +105,10 @@ ORDER BY total_revenue_eur DESC;
 
 -- Pacientes que nunca han completado una cita:
 SELECT patient_id, full_name
-FROM `project.dbt_marts.dim_patients`
+FROM `topd-lab.dbt_marts.dim_patients`
 WHERE NOT EXISTS (
     SELECT 1
-    FROM `project.dbt_marts.fct_appointments`
+    FROM `topd-lab.dbt_marts.fct_appointments`
     WHERE fct_appointments.patient_id = dim_patients.patient_id
       AND status = 'completed'
 );
@@ -141,7 +141,7 @@ WITH all_dates AS (
 ),
 daily_revenue AS (
     SELECT payment_date, SUM(amount_eur) AS revenue_eur
-    FROM `project.dbt_marts.fct_payments`
+    FROM `topd-lab.dbt_marts.fct_payments`
     WHERE payment_status = 'paid'
     GROUP BY payment_date
 )
@@ -168,7 +168,7 @@ FROM (
         channel,
         COUNTIF(status = 'no_show')         AS no_show_count,
         COUNT(*)                            AS total_count
-    FROM `project.dbt_marts.fct_appointments`
+    FROM `topd-lab.dbt_marts.fct_appointments`
     GROUP BY specialty_id, channel
 )
 QUALIFY RANK() OVER (
