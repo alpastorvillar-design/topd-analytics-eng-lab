@@ -1,0 +1,37 @@
+﻿name: 'mediconnect'
+version: '1.0.0'
+config-version: 2
+
+profile: 'mediconnect'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  is_dev: true
+  project_id: "topd-lab"
+  bq_location: "EU"
+
+models:
+  mediconnect:
+    staging:
+      +materialized: view
+      +dataset: dbt_staging
+    intermediate:
+      +materialized: view
+      +dataset: dbt_intermediate
+    marts:
+      core:
+        +materialized: table
+        +dataset: dbt_marts
+      product:
+        +materialized: table
+        +dataset: dbt_marts
+      executive:
+        +materialized: table
+        +dataset: dbt_marts

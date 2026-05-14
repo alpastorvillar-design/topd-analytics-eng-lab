@@ -1,0 +1,23 @@
+﻿# COPIA este archivo como profiles.yml (sin .example) para uso local
+# profiles.yml está en .gitignore — NUNCA lo subas al repo
+# En dbt Cloud las credenciales se configuran en la UI, no aquí
+
+mediconnect:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: service-account-json
+      project: topd-lab
+      dataset: dbt_staging
+      location: EU
+      threads: 4
+      keyfile_json:
+        type: service_account
+        project_id: topd-lab
+        private_key_id: "RELLENA_CON_TU_KEY_ID"
+        private_key: "RELLENA_CON_TU_PRIVATE_KEY"
+        client_email: "dbt-bigquery-sa@topd-lab.iam.gserviceaccount.com"
+        client_id: "RELLENA_CON_TU_CLIENT_ID"
+        auth_uri: "https://accounts.google.com/o/oauth2/auth"
+        token_uri: "https://oauth2.googleapis.com/token"

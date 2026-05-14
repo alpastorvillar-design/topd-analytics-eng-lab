@@ -1,0 +1,9 @@
+country_id,country_name,region,currency,language,timezone
+ES,España,Europa,EUR,es,Europe/Madrid
+GB,Reino Unido,Europa,GBP,en,Europe/London
+IT,Italia,Europa,EUR,it,Europe/Rome
+DE,Alemania,Europa,EUR,de,Europe/Berlin
+FR,Francia,Europa,EUR,fr,Europe/Paris
+MX,México,Latinoamérica,MXN,es,America/Mexico_City
+CO,Colombia,Latinoamérica,COP,es,America/Bogota
+PT,Portugal,Europa,EUR,pt,Europe/Lisbon

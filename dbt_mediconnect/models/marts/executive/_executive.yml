@@ -1,0 +1,77 @@
+version: 2
+
+models:
+  - name: agg_daily_business_kpis
+    description: >
+      Daily business KPIs aggregated across all countries and specialties.
+      Includes running totals (cumulative_revenue_eur, cumulative_appointments)
+      computed with SUM OVER window functions. Feeds the executive dashboard.
+    columns:
+      - name: date
+        description: Calendar date
+        tests:
+          - not_null
+          - unique
+      - name: total_appointments
+        tests:
+          - not_null
+      - name: completed_appointments
+        tests:
+          - not_null
+      - name: daily_revenue_eur
+        tests:
+          - not_null
+      - name: cumulative_revenue_eur
+        description: Running total of revenue from the earliest date to current row
+      - name: cumulative_appointments
+        description: Running total of appointments
+      - name: completion_rate
+        description: completed_appointments / total_appointments (SAFE_DIVIDE)
+      - name: lead_conversion_rate
+        description: converted_leads / total_leads (SAFE_DIVIDE)
+
+  - name: agg_monthly_country_kpis
+    description: >
+      Monthly KPIs broken down by country. Used for geographic performance
+      comparison in dashboards. Includes revenue ranking per month.
+    columns:
+      - name: month
+        tests:
+          - not_null
+      - name: country_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_countries')
+              field: country_id
+      - name: total_revenue_eur
+        tests:
+          - not_null
+      - name: country_revenue_rank
+        description: Rank of this country by revenue within the month (1 = highest)
+      - name: revenue_per_patient
+        description: total_revenue_eur / unique_patients
+
+  - name: agg_specialty_performance
+    description: >
+      Monthly performance metrics per medical specialty. Used to identify
+      top and bottom performing specialties. Includes revenue rank within month.
+    columns:
+      - name: month
+        tests:
+          - not_null
+      - name: specialty_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_specialties')
+              field: specialty_id
+      - name: total_revenue_eur
+        tests:
+          - not_null
+      - name: completion_rate
+        description: completed_appointments / total_appointments
+      - name: appointments_per_doctor
+        description: total_appointments / active_doctors
+      - name: specialty_revenue_rank
+        description: Rank by revenue within the month (1 = highest revenue specialty)

@@ -1,0 +1,66 @@
+version: 2
+
+models:
+  - name: stg_patients
+    description: "Pacientes limpios y tipados desde raw. Una fila por paciente."
+    columns:
+      - name: patient_id
+        tests: [unique, not_null]
+      - name: acquisition_channel
+        tests:
+          - accepted_values:
+              values: ['seo', 'sem', 'direct', 'referral', 'social', 'email']
+
+  - name: stg_doctors
+    description: "Médicos limpios y tipados desde raw. Una fila por médico."
+    columns:
+      - name: doctor_id
+        tests: [unique, not_null]
+
+  - name: stg_specialties
+    description: "Catálogo de especialidades médicas."
+    columns:
+      - name: specialty_id
+        tests: [unique, not_null]
+
+  - name: stg_countries
+    description: "Catálogo de países donde opera la plataforma."
+    columns:
+      - name: country_id
+        tests: [unique, not_null]
+
+  - name: stg_appointments
+    description: "Citas médicas limpias y tipadas."
+    columns:
+      - name: appointment_id
+        tests: [unique, not_null]
+      - name: patient_id
+        tests: [not_null]
+      - name: doctor_id
+        tests: [not_null]
+      - name: status
+        tests:
+          - accepted_values:
+              values: ['completed', 'cancelled', 'no_show', 'scheduled']
+
+  - name: stg_payments
+    description: "Pagos limpios. amount_cents siempre es entero positivo."
+    columns:
+      - name: payment_id
+        tests: [unique, not_null]
+      - name: appointment_id
+        tests: [not_null]
+      - name: payment_status
+        tests:
+          - accepted_values:
+              values: ['paid', 'refunded', 'failed', 'pending']
+
+  - name: stg_leads
+    description: "Leads captados. patient_id y doctor_id pueden ser NULL."
+    columns:
+      - name: lead_id
+        tests: [unique, not_null]
+      - name: lead_status
+        tests:
+          - accepted_values:
+              values: ['new', 'contacted', 'converted', 'lost']

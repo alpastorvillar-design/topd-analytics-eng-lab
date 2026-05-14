@@ -1,0 +1,67 @@
+version: 2
+
+models:
+  - name: dim_patients
+    description: "Dimensión de pacientes con métricas de ciclo de vida y segmento."
+    columns:
+      - name: patient_id
+        tests: [unique, not_null]
+      - name: patient_segment
+        tests:
+          - accepted_values:
+              values: ['new', 'active', 'loyal', 'champion', 'unknown']
+
+  - name: dim_doctors
+    description: "Dimensión de médicos con métricas de rendimiento y ranking."
+    columns:
+      - name: doctor_id
+        tests: [unique, not_null]
+
+  - name: dim_specialties
+    description: "Catálogo de especialidades médicas."
+    columns:
+      - name: specialty_id
+        tests: [unique, not_null]
+
+  - name: dim_countries
+    description: "Catálogo de países."
+    columns:
+      - name: country_id
+        tests: [unique, not_null]
+
+  - name: fct_appointments
+    description: "Hechos de citas. Particionado por mes, clusterizado por país/especialidad/status."
+    columns:
+      - name: appointment_id
+        tests: [unique, not_null]
+      - name: patient_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_patients')
+              field: patient_id
+      - name: doctor_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_doctors')
+              field: doctor_id
+      - name: status
+        tests:
+          - accepted_values:
+              values: ['completed', 'cancelled', 'no_show', 'scheduled']
+
+  - name: fct_payments
+    description: "Hechos de pagos. Particionado por mes de pago."
+    columns:
+      - name: payment_id
+        tests: [unique, not_null]
+      - name: amount_cents
+        tests:
+          - not_null
+
+  - name: fct_leads
+    description: "Hechos de leads con funnel completo lead → cita → pago."
+    columns:
+      - name: lead_id
+        tests: [unique, not_null]

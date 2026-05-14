@@ -1,0 +1,26 @@
+version: 2
+
+models:
+  - name: int_appointments_enriched
+    description: "Citas enriquecidas con contexto de médico, paciente y pago. Incluye window functions para secuencia y días entre citas."
+    columns:
+      - name: appointment_id
+        tests: [unique, not_null]
+
+  - name: int_patient_lifetime_metrics
+    description: "Métricas de ciclo de vida por paciente: volumen, revenue, ratios y cohort_month."
+    columns:
+      - name: patient_id
+        tests: [unique, not_null]
+
+  - name: int_doctor_performance
+    description: "Métricas de rendimiento por médico con ranking dentro de especialidad."
+    columns:
+      - name: doctor_id
+        tests: [unique, not_null]
+
+  - name: int_lead_to_appointment_funnel
+    description: "Funnel lead → cita → pago con flags de conversión y velocidad en días."
+    columns:
+      - name: lead_id
+        tests: [unique, not_null]

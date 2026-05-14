@@ -1,0 +1,46 @@
+# === CREDENCIALES — NUNCA AL REPO ===
+.env
+*.json
+*service-account*.json
+gcp-*.json
+dbt-sa-*.json
+
+# dbt profiles reales (contienen credenciales)
+dbt_mediconnect/profiles.yml
+
+# === PYTHON ===
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+.Python
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+
+# === DATA (puede ser grande o sensible) ===
+data/raw/
+data/generated/
+
+# === SISTEMA OPERATIVO ===
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# === IDEs ===
+.vscode/
+.idea/
+*.swp
+
+# === dbt artifacts (generados, no son código) ===
+dbt_mediconnect/target/
+dbt_mediconnect/logs/
+dbt_mediconnect/.user.yml
+
+# === PRIVADO — No al repo público ===
+notes/
+CLAUDE.md
+docs/

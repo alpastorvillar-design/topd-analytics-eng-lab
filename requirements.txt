@@ -1,0 +1,5 @@
+faker==37.1.0
+pandas==2.2.3
+google-cloud-bigquery==3.34.0
+python-dotenv==1.1.0
+pyarrow==20.0.0

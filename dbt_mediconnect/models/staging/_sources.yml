@@ -1,0 +1,108 @@
+﻿version: 2
+
+# ¿Qué es un source en dbt?
+# Un source declara de dónde vienen los datos crudos (raw).
+# En vez de escribir `raw_mediconnect.appointments` en tus modelos,
+# usas `{{ source('mediconnect', 'appointments') }}`.
+# Ventajas: puedes añadir tests, freshness checks y documentación centralizada.
+
+sources:
+  - name: mediconnect
+    database: topd-lab
+    schema: raw_mediconnect
+    description: "Datos crudos del marketplace eHealth MediConnect cargados desde Python."
+
+    freshness:
+      warn_after: {count: 24, period: hour}
+      error_after: {count: 48, period: hour}
+    loaded_at_field: created_at
+
+    tables:
+      - name: patients
+        description: "Tabla de pacientes registrados en la plataforma."
+        columns:
+          - name: patient_id
+            description: "Identificador único del paciente."
+            tests:
+              - unique
+              - not_null
+          - name: country_id
+            tests:
+              - not_null
+          - name: acquisition_channel
+            tests:
+              - accepted_values:
+                  values: ['seo', 'sem', 'direct', 'referral', 'social', 'email']
+
+      - name: doctors
+        description: "Tabla de médicos registrados en la plataforma."
+        columns:
+          - name: doctor_id
+            tests:
+              - unique
+              - not_null
+          - name: specialty_id
+            tests:
+              - not_null
+
+      - name: specialties
+        description: "Catálogo de especialidades médicas."
+        columns:
+          - name: specialty_id
+            tests:
+              - unique
+              - not_null
+
+      - name: countries
+        description: "Catálogo de países donde opera la plataforma."
+        columns:
+          - name: country_id
+            tests:
+              - unique
+              - not_null
+
+      - name: appointments
+        description: "Citas médicas creadas en la plataforma."
+        loaded_at_field: appointment_created_at
+        columns:
+          - name: appointment_id
+            tests:
+              - unique
+              - not_null
+          - name: status
+            tests:
+              - accepted_values:
+                  values: ['completed', 'cancelled', 'no_show', 'scheduled']
+          - name: channel
+            tests:
+              - accepted_values:
+                  values: ['web', 'app', 'phone', 'clinic']
+
+      - name: payments
+        description: "Pagos asociados a citas médicas."
+        loaded_at_field: payment_created_at
+        columns:
+          - name: payment_id
+            tests:
+              - unique
+              - not_null
+          - name: payment_status
+            tests:
+              - accepted_values:
+                  values: ['paid', 'refunded', 'failed', 'pending']
+
+      - name: leads
+        description: "Leads captados por la plataforma antes de convertirse en cita."
+        columns:
+          - name: lead_id
+            tests:
+              - unique
+              - not_null
+          - name: lead_source
+            tests:
+              - accepted_values:
+                  values: ['seo', 'sem', 'direct', 'referral', 'social', 'email']
+          - name: lead_status
+            tests:
+              - accepted_values:
+                  values: ['new', 'contacted', 'converted', 'lost']

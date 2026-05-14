@@ -1,0 +1,70 @@
+version: 2
+
+models:
+  - name: mart_patient_retention
+    description: >
+      Cohort retention analysis. One row per cohort_month × months_since_acquisition.
+      Measures what % of patients who first booked in a given month returned in subsequent months.
+    columns:
+      - name: cohort_month
+        description: Month of patient's first completed appointment (cohort definition)
+        tests:
+          - not_null
+      - name: months_since_acquisition
+        description: Months elapsed since cohort_month (0 = acquisition month)
+        tests:
+          - not_null
+      - name: cohort_size
+        description: Total number of patients in this cohort
+        tests:
+          - not_null
+      - name: retained_patients
+        description: Patients from the cohort who had a completed appointment this month
+        tests:
+          - not_null
+      - name: retention_rate
+        description: retained_patients / cohort_size (NULL-safe)
+
+  - name: mart_doctor_supply_demand
+    description: >
+      Supply vs demand metrics per doctor per month. Highlights under-supplied
+      specialties and over-booked doctors for marketplace management.
+    columns:
+      - name: month
+        tests:
+          - not_null
+      - name: doctor_id
+        tests:
+          - not_null
+      - name: total_slots_available
+        description: Approximate supply (based on working days assumption)
+      - name: total_appointments_booked
+        description: Actual demand
+      - name: occupancy_rate
+        description: booked / available slots
+
+  - name: mart_appointment_quality
+    description: >
+      Quality metrics per channel × specialty × country per month.
+      Used to identify where no-shows and cancellations concentrate.
+    columns:
+      - name: month
+        tests:
+          - not_null
+      - name: channel
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['web', 'app', 'phone', 'clinic']
+      - name: specialty_id
+        tests:
+          - not_null
+      - name: country_id
+        tests:
+          - not_null
+      - name: completion_rate
+        description: completed / total appointments
+      - name: no_show_rate
+        description: no_show / total appointments
+      - name: cancellation_rate
+        description: cancelled / total appointments
