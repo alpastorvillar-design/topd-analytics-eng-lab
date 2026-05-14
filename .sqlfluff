@@ -1,27 +1,25 @@
 [sqlfluff]
 dialect = bigquery
-templater = dbt
+templater = jinja
 max_line_length = 120
 
 # Reglas excluidas (convenciones de estilo elegidas en el proyecto):
 #
-# LT01  Aligned 'as' keyword with multiple spaces. Convención de columnas
-#       alineadas para legibilidad. Se mantiene aquí.
-# LT02  Indentation expectations. Las queries multilínea con cases inline
-#       y subqueries no encajan con el indent automático.
-# LT08  Blank line after CTE closing bracket. Preferencia de estilo.
-# LT09  Single-line select targets. Multi-line es lo que usamos.
-# ST02  Use COALESCE over simple CASE. Se mantienen los CASE explícitos
-#       cuando aportan claridad en revisión.
-# ST06  Positional select ordering. Las PKs van primero por convención.
-# ST07  USING vs ON. Preferimos USING cuando los nombres de columna casan.
-# AL01  Implicit table aliasing. Usamos el patrón "from x as t" mezclado
-#       con "from x t". Ambos son válidos.
+# LT01  Aligned 'as' keyword con multiples espacios. Convencion de columnas
+#       alineadas para legibilidad.
+# LT02  Indent expectations. Las queries multilinea con cases inline y
+#       subqueries no encajan con el indent automatico.
+# LT08  Blank line tras CTE closing bracket. Preferencia de estilo.
+# LT09  Single-line select targets. Usamos multi-line.
+# ST02  Use COALESCE over simple CASE. Mantenemos CASE explicito cuando
+#       aporta claridad.
+# ST06  Positional select ordering. PKs primero por convencion.
+# ST07  USING vs ON. Preferimos USING cuando los nombres casan.
+# AL01  Implicit table aliasing. Mezclamos "from x as t" y "from x t".
 # AM04  Ambiguous wildcard en CTE pass-throughs.
-# RF02  Unqualified column refs en CTEs.
+# RF02  Unqualified column refs en pipelines CTE.
 # RF03  References qualified.
-# RF04  Keywords como identifiers (`date` column en agg_daily_business_kpis
-#       sale por aliasing de appointment_date para el join key).
+# RF04  Keywords como identifiers (col 'date' en agg_daily_business_kpis).
 # CV02  COALESCE vs IFNULL.
 # CV11  Cast vs ::
 
@@ -51,6 +49,22 @@ capitalisation_policy = lower
 [sqlfluff:rules:capitalisation.types]
 extended_capitalisation_policy = lower
 
-[sqlfluff:templater:dbt]
-project_dir = ./dbt_mediconnect
-profiles_dir = ~/.dbt
+[sqlfluff:templater:jinja]
+apply_dbt_builtins = true
+
+# Vars del proyecto: stubean lo que devuelve var('xxx') durante el lint.
+[sqlfluff:templater:jinja:context]
+is_dev = false
+dev_window_days = 90
+project_id = topd-lab
+bq_location = EU
+
+# Stubs de los macros del proyecto. Sin esto el templater jinja no resuelve
+# {{ cents_to_euros(...) }} ni el resto y aparecen errores PRS/TMP.
+# Implementacion mock que produce SQL valido para que el parser de bigquery
+# acepte el output renderizado.
+[sqlfluff:templater:jinja:macros]
+macro_cents_to_euros = "{% macro cents_to_euros(amount_cents) %}round({{ amount_cents }} / 100.0, 2){% endmacro %}"
+macro_safe_divide = "{% macro safe_divide(numerator, denominator) %}safe_divide({{ numerator }}, {{ denominator }}){% endmacro %}"
+macro_classify_patient_segment = "{% macro classify_patient_segment(total_appointments, days_since_last_appointment) %}'unknown'{% endmacro %}"
+macro_generate_surrogate_key = "{% macro generate_surrogate_key(field_list) %}to_hex(md5(cast(coalesce(cast(null as string), '') as string))){% endmacro %}"

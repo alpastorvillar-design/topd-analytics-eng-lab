@@ -67,7 +67,7 @@ jobs:
 
       - name: sqlfluff lint (dbt models)
         working-directory: dbt_mediconnect
-        run: sqlfluff lint models/ snapshots/ --dialect bigquery
+        run: sqlfluff lint models/ --dialect bigquery
 
       - name: sqlfluff lint (sql_practice)
         run: sqlfluff lint sql_practice/ --dialect bigquery --templater raw

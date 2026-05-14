@@ -2,3 +2,7 @@ target/
 dbt_packages/
 data/
 .venv/
+
+# Los snapshots usan el tag dbt-specific {% snapshot %} que el templater
+# jinja no entiende. Se revisan localmente con dbt compile.
+dbt_mediconnect/snapshots/
