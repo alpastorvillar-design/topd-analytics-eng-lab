@@ -6,12 +6,17 @@ on:
       - "dbt_mediconnect/**"
       - "sql_practice/**"
       - ".sqlfluff"
+      - ".sqlfluffignore"
       - ".github/workflows/dbt-ci.yml"
   push:
-    branches: [main]
+    branches: [main, master]
     paths:
       - "dbt_mediconnect/**"
       - "sql_practice/**"
+      - ".sqlfluff"
+      - ".sqlfluffignore"
+      - ".github/workflows/dbt-ci.yml"
+  workflow_dispatch:
 
 jobs:
   lint-and-parse:
