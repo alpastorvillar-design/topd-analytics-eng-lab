@@ -1,8 +1,8 @@
-﻿# Power BI — Setup Guide
+# Power BI - Setup Guide
 
 ## Connection
 
-1. Open Power BI Desktop → **Get Data → Google BigQuery**
+1. Open Power BI Desktop -> **Get Data -> Google BigQuery**
 2. Project: `topd-lab`
 3. Dataset filter: `dbt_marts`
 4. Select tables: `agg_daily_business_kpis`, `agg_monthly_country_kpis`,
@@ -14,8 +14,8 @@
 
 | Mode | When to use |
 |---|---|
-| **Import** | Dev/local — faster, no quota, data snapshot |
-| **DirectQuery** | Production dashboard — always live data from BigQuery |
+| **Import** | Dev/local - faster, no quota, data snapshot |
+| **DirectQuery** | Production dashboard - always live data from BigQuery |
 
 For this project, Import mode is fine since the data is synthetic and updated manually.
 For a live production environment, DirectQuery + scheduled refresh is preferred.
@@ -32,6 +32,6 @@ For a live production environment, DirectQuery + scheduled refresh is preferred.
 
 ## Publishing
 
-1. Power BI Desktop → **Publish** → Workspace
-2. **Schedule refresh**: Settings → Datasets → Scheduled refresh → Daily 06:00 UTC
+1. Power BI Desktop -> **Publish** -> Workspace
+2. **Schedule refresh**: Settings -> Datasets -> Scheduled refresh -> Daily 06:00 UTC
 3. For BigQuery scheduled refresh you need a **Data Gateway** or use **Service Principal** auth

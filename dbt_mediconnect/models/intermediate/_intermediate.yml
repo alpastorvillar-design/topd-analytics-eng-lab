@@ -20,7 +20,7 @@ models:
         tests: [unique, not_null]
 
   - name: int_lead_to_appointment_funnel
-    description: "Funnel lead → cita → pago con flags de conversión y velocidad en días."
+    description: "Funnel lead -> cita -> pago con flags de conversión y velocidad en días."
     columns:
       - name: lead_id
         tests: [unique, not_null]

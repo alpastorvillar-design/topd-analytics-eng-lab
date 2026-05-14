@@ -6,6 +6,12 @@ models:
     columns:
       - name: patient_id
         tests: [unique, not_null]
+      - name: country_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_countries')
+              field: country_id
       - name: patient_segment
         tests:
           - accepted_values:
@@ -16,6 +22,24 @@ models:
     columns:
       - name: doctor_id
         tests: [unique, not_null]
+      - name: specialty_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_specialties')
+              field: specialty_id
+      - name: country_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_countries')
+              field: country_id
+      - name: is_active
+        tests:
+          - not_null
+          - accepted_values:
+              values: [true, false]
+              quote: false
 
   - name: dim_specialties
     description: "Catálogo de especialidades médicas."
@@ -30,7 +54,7 @@ models:
         tests: [unique, not_null]
 
   - name: fct_appointments
-    description: "Hechos de citas. Particionado por mes, clusterizado por país/especialidad/status."
+    description: "Hechos de citas. Particionado por mes, clusterizado por país/especialidad/status. Materialización incremental con merge."
     columns:
       - name: appointment_id
         tests: [unique, not_null]
@@ -46,22 +70,77 @@ models:
           - relationships:
               to: ref('dim_doctors')
               field: doctor_id
+      - name: specialty_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_specialties')
+              field: specialty_id
+      - name: country_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_countries')
+              field: country_id
       - name: status
         tests:
           - accepted_values:
               values: ['completed', 'cancelled', 'no_show', 'scheduled']
+      - name: channel
+        tests:
+          - accepted_values:
+              values: ['web', 'app', 'phone', 'clinic']
+      - name: appointment_date
+        tests:
+          - not_null
 
   - name: fct_payments
     description: "Hechos de pagos. Particionado por mes de pago."
     columns:
       - name: payment_id
         tests: [unique, not_null]
+      - name: appointment_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('fct_appointments')
+              field: appointment_id
+      - name: specialty_id
+        tests:
+          - relationships:
+              to: ref('dim_specialties')
+              field: specialty_id
+      - name: country_id
+        tests:
+          - relationships:
+              to: ref('dim_countries')
+              field: country_id
       - name: amount_cents
         tests:
           - not_null
+      - name: payment_status
+        tests:
+          - accepted_values:
+              values: ['paid', 'refunded', 'failed', 'pending']
 
   - name: fct_leads
-    description: "Hechos de leads con funnel completo lead → cita → pago."
+    description: "Hechos de leads con funnel completo lead -> cita -> pago."
     columns:
       - name: lead_id
         tests: [unique, not_null]
+      - name: specialty_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_specialties')
+              field: specialty_id
+      - name: country_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_countries')
+              field: country_id
+      - name: lead_status
+        tests:
+          - accepted_values:
+              values: ['new', 'contacted', 'converted', 'lost']

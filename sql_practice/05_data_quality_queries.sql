@@ -1,14 +1,10 @@
-﻿-- =============================================================================
--- 05_data_quality_queries.sql  ·  Queries de calidad de datos
--- =============================================================================
--- Patrones SQL para detectar duplicados, NULLs, orphan records,
--- valores fuera de rango e inconsistencias de negocio.
--- Los mismos patrones que usan los dbt singular tests.
--- =============================================================================
+-- 05_data_quality_queries.sql: queries de calidad de datos
+-- Patrones SQL para detectar duplicados, NULLs, orphan records, valores
+-- fuera de rango e inconsistencias de negocio. Mismos patrones que los
+-- dbt singular tests.
 
--- ─────────────────────────────────────────────────────────────────────────────
+
 -- 1. Unicidad de PKs
--- ─────────────────────────────────────────────────────────────────────────────
 -- Un resultado vacío = sin duplicados (el check pasa).
 SELECT appointment_id, COUNT(*) AS n
 FROM `topd-lab.dbt_marts.fct_appointments`
@@ -21,9 +17,7 @@ FROM `topd-lab.dbt_marts.fct_appointments`
 QUALIFY COUNT(*) OVER (PARTITION BY appointment_id) > 1;
 
 
--- ─────────────────────────────────────────────────────────────────────────────
 -- 2. Integridad referencial
--- ─────────────────────────────────────────────────────────────────────────────
 -- Citas con patient_id que no existe en dim_patients:
 SELECT a.appointment_id, a.patient_id
 FROM `topd-lab.dbt_marts.fct_appointments` AS a
@@ -37,9 +31,7 @@ LEFT JOIN `topd-lab.dbt_marts.fct_appointments` AS a USING (appointment_id)
 WHERE a.appointment_id IS NULL;
 
 
--- ─────────────────────────────────────────────────────────────────────────────
 -- 3. Valores aceptados
--- ─────────────────────────────────────────────────────────────────────────────
 SELECT DISTINCT status
 FROM `topd-lab.dbt_marts.fct_appointments`
 WHERE status NOT IN ('completed', 'cancelled', 'no_show', 'scheduled');
@@ -49,9 +41,7 @@ FROM `topd-lab.dbt_marts.fct_payments`
 WHERE payment_status NOT IN ('paid', 'refunded', 'failed', 'pending');
 
 
--- ─────────────────────────────────────────────────────────────────────────────
 -- 4. Rangos y coherencia temporal
--- ─────────────────────────────────────────────────────────────────────────────
 -- amount_cents debe ser positivo:
 SELECT payment_id, amount_cents
 FROM `topd-lab.dbt_marts.fct_payments`
@@ -75,10 +65,8 @@ WHERE appointment_date < '2022-01-01'
    OR appointment_date > CURRENT_DATE();
 
 
--- ─────────────────────────────────────────────────────────────────────────────
 -- 5. Reglas de negocio específicas
--- ─────────────────────────────────────────────────────────────────────────────
--- Sólo las citas 'completed' deben tener pagos:
+-- Solo las citas 'completed' deben tener pagos:
 SELECT a.appointment_id, a.status, p.payment_id
 FROM `topd-lab.dbt_marts.fct_payments`     AS p
 JOIN `topd-lab.dbt_marts.fct_appointments` AS a USING (appointment_id)
@@ -93,9 +81,7 @@ WHERE l.is_converted_to_appointment = TRUE
   AND a.appointment_id IS NULL;
 
 
--- ─────────────────────────────────────────────────────────────────────────────
 -- 6. Distribución de NULLs por columna (auditoría rápida)
--- ─────────────────────────────────────────────────────────────────────────────
 SELECT
     COUNTIF(patient_id           IS NULL) AS null_patient_id,
     COUNTIF(doctor_id            IS NULL) AS null_doctor_id,
@@ -106,9 +92,7 @@ SELECT
 FROM `topd-lab.dbt_marts.fct_appointments`;
 
 
--- ─────────────────────────────────────────────────────────────────────────────
 -- 7. Análisis de cohortes: retención de pacientes
--- ─────────────────────────────────────────────────────────────────────────────
 WITH patient_cohorts AS (
     SELECT
         patient_id,
@@ -152,9 +136,7 @@ GROUP BY cd.cohort_month, cd.months_since_acquisition, cs.cohort_size
 ORDER BY cd.cohort_month, cd.months_since_acquisition;
 
 
--- ─────────────────────────────────────────────────────────────────────────────
 -- 8. MoM growth del revenue
--- ─────────────────────────────────────────────────────────────────────────────
 WITH monthly AS (
     SELECT
         DATE_TRUNC(payment_date, MONTH)  AS month,

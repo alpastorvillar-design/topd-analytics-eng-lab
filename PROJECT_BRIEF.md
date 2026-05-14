@@ -4,24 +4,27 @@ End-to-end Analytics Engineering project on a synthetic eHealth marketplace data
 
 ## What it covers
 
-A fictional platform where patients book appointments with doctors across 8 European
-countries and 20 medical specialties. The dataset has ~50k appointments, ~5k patients,
-~500 doctors, and ~35k payments — all generated with realistic distributions using Faker.
+A fictional platform where patients book appointments with doctors across 8
+countries and 20 medical specialties. The dataset has ~60k appointments, ~15k patients,
+500 doctors, ~39k payments and ~100k leads over 3 years (2022-2024),
+generated with realistic distributions using Faker. Volumes are calibrated to
+exercise partitioning, clustering, incremental models and BI tooling at a scale
+closer to a real production marketplace.
 
 The project builds the full data pipeline from scratch:
 
-1. **Data generation** — Python scripts produce raw CSVs with referential integrity,
+1. **Data generation** - Python scripts produce raw CSVs with referential integrity,
    realistic date distributions, and controlled no-show / cancellation rates.
 
-2. **Raw ingestion** — Typed load into BigQuery (`raw_mediconnect` dataset) with
+2. **Raw ingestion** - Typed load into BigQuery (`raw_mediconnect` dataset) with
    explicit schemas and a 16-check validation suite.
 
-3. **dbt transformations** — Three-layer architecture:
+3. **dbt transformations** - Three-layer architecture:
    - Staging: type casting and renaming, materialised as views
    - Intermediate: joins, window functions, business logic (ROW_NUMBER, LAG, RANK)
    - Marts: star schema (4 dims + 3 facts), product analytics, and executive aggregates
 
-4. **BI-ready output** — Partitioned and clustered fact tables feeding Power BI,
+4. **BI-ready output** - Partitioned and clustered fact tables feeding Power BI,
    Tableau, and Metabase dashboards.
 
 ## Stack
@@ -30,7 +33,7 @@ The project builds the full data pipeline from scratch:
 |-------|------|
 | Data generation | Python 3.12 + Faker |
 | Data warehouse | Google BigQuery (EU region) |
-| Transformations | dbt Core — BigQuery adapter |
+| Transformations | dbt Core - BigQuery adapter |
 | BI | Power BI / Tableau / Metabase |
 
 ## Repository structure

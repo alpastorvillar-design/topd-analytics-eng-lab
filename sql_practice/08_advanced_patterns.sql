@@ -1,16 +1,11 @@
--- =============================================================================
--- 08_advanced_patterns.sql  ·  PIVOT, ARRAY, JSON, approximate aggregations
--- =============================================================================
--- Patterns that come up in production analytics: manual pivot with conditional
--- aggregation, ARRAY_AGG for nesting, STRUCT, JSON extraction, APPROX functions,
--- EXCEPT/INTERSECT, and dynamic date spine generation.
--- =============================================================================
+-- 08_advanced_patterns.sql: PIVOT, ARRAY, JSON, approximate aggregations
+-- Patterns que aparecen en producción: pivot manual con agregación condicional,
+-- ARRAY_AGG para anidar, STRUCT, JSON extraction, APPROX functions,
+-- EXCEPT/INTERSECT y date spine dinámico.
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 1. Manual PIVOT: monthly revenue per channel as columns
---    BigQuery has no PIVOT keyword; use conditional aggregation.
--- ─────────────────────────────────────────────────────────────────────────────
+-- 1. Manual PIVOT: revenue mensual por canal en columnas.
+--    BigQuery no tiene keyword PIVOT en sintaxis legacy; usamos conditional aggregation.
 SELECT
     DATE_TRUNC(payment_date, MONTH)                         AS month,
     ROUND(SUM(CASE WHEN channel = 'web'    THEN amount_eur ELSE 0 END), 2) AS web_revenue,
@@ -25,10 +20,8 @@ GROUP BY month
 ORDER BY month;
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 2. UNPIVOT: convert wide retention columns to long format for charting
---    (mart_patient_retention has ret_m1 through ret_m6 as separate columns)
--- ─────────────────────────────────────────────────────────────────────────────
+-- 2. UNPIVOT: convertir columnas wide de retención a formato long para gráficos.
+--    mart_patient_retention tiene ret_m1 a ret_m6 como columnas separadas.
 SELECT cohort_month, cohort_size, month_offset, retention_rate
 FROM `topd-lab.dbt_marts.mart_patient_retention`
 UNPIVOT (
@@ -44,10 +37,8 @@ UNPIVOT (
 ORDER BY cohort_month, month_offset;
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 3. ARRAY_AGG: aggregate child rows as an array inside the parent row
---    One row per patient with all their appointment IDs as an array.
--- ─────────────────────────────────────────────────────────────────────────────
+-- 3. ARRAY_AGG: agregar filas hijas como array dentro de la fila padre.
+--    Una fila por paciente con todos sus appointment_id como array.
 SELECT
     patient_id,
     COUNT(*)                                            AS total_appointments,
@@ -62,53 +53,44 @@ GROUP BY patient_id
 LIMIT 10;
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 4. UNNEST arrays: one row per specialty per doctor
---    Hypothetical: if doctors.specialties were ARRAY<STRING>
--- ─────────────────────────────────────────────────────────────────────────────
--- Real use case: explode an array column from a JSON source or nested BQ table.
+-- 4. UNNEST de arrays: una fila por especialidad por médico.
+--    Hipotético: si doctors.specialties fuera ARRAY<STRING>.
 SELECT
     d.doctor_id,
     d.full_name,
     specialty_tag
 FROM `topd-lab.dbt_marts.dim_doctors` AS d
 CROSS JOIN UNNEST(['cardiology', 'general', 'pediatrics']) AS specialty_tag
--- In practice: CROSS JOIN UNNEST(d.specialty_tags) AS specialty_tag
+-- En la práctica: CROSS JOIN UNNEST(d.specialty_tags) AS specialty_tag
 LIMIT 20;
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 5. APPROX functions: faster aggregations on large tables
---    APPROX_COUNT_DISTINCT uses HyperLogLog — ~2% error, 10-100x faster.
--- ─────────────────────────────────────────────────────────────────────────────
+-- 5. APPROX functions: aggregations más rápidas sobre tablas grandes.
+--    APPROX_COUNT_DISTINCT usa HyperLogLog (~2% error, 10-100x más rápido).
 SELECT
     DATE_TRUNC(appointment_date, MONTH)                 AS month,
     COUNT(DISTINCT patient_id)                          AS exact_unique_patients,
     APPROX_COUNT_DISTINCT(patient_id)                   AS approx_unique_patients,
-    APPROX_QUANTILES(amount_eur, 4)                     AS revenue_quartiles  -- [p0, p25, p50, p75, p100]
+    APPROX_QUANTILES(amount_eur, 4)                     AS revenue_quartiles
 FROM `topd-lab.dbt_marts.fct_appointments` AS a
 LEFT JOIN `topd-lab.dbt_marts.fct_payments` AS p USING (appointment_id)
 GROUP BY month
 ORDER BY month;
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 6. EXCEPT / INTERSECT: set operations for patient overlap analysis
--- ─────────────────────────────────────────────────────────────────────────────
--- Patients who booked online but never via phone:
+-- 6. EXCEPT / INTERSECT: operaciones de conjunto para overlap de pacientes.
+-- Pacientes que reservaron online pero nunca por teléfono:
 SELECT patient_id FROM `topd-lab.dbt_marts.fct_appointments` WHERE channel = 'web'
 EXCEPT DISTINCT
 SELECT patient_id FROM `topd-lab.dbt_marts.fct_appointments` WHERE channel = 'phone';
 
--- Patients who used both web and phone:
+-- Pacientes que usaron web y teléfono:
 SELECT patient_id FROM `topd-lab.dbt_marts.fct_appointments` WHERE channel = 'web'
 INTERSECT DISTINCT
 SELECT patient_id FROM `topd-lab.dbt_marts.fct_appointments` WHERE channel = 'phone';
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 7. Date spine with LEFT JOIN: zero-fill missing days in a time series
--- ─────────────────────────────────────────────────────────────────────────────
+-- 7. Date spine con LEFT JOIN: zero-fill de días sin datos en time series.
 WITH spine AS (
     SELECT d AS date
     FROM UNNEST(
@@ -139,25 +121,23 @@ LEFT JOIN daily_revenue AS r ON s.date = r.payment_date
 ORDER BY s.date;
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 8. Recursive CTE: patient referral chain (depth-limited)
---    Useful when source data has a self-referencing FK (referrer_patient_id).
--- ─────────────────────────────────────────────────────────────────────────────
--- Note: BigQuery supports recursive CTEs since 2022 (GA).
--- Hypothetical column: patients.referrer_patient_id
+-- 8. Recursive CTE: cadena de referidos de pacientes (depth-limited).
+--    Útil cuando el source tiene FK auto-referencial (referrer_patient_id).
+--    BigQuery soporta recursive CTEs desde 2022 (GA).
+--    Columna hipotética: patients.referrer_patient_id.
 WITH RECURSIVE referral_chain AS (
-    -- Anchor: patients with no referrer (root nodes)
+    -- Anchor: pacientes sin referrer (root nodes)
     SELECT
         patient_id,
         CAST(NULL AS STRING)    AS referrer_patient_id,
         0                       AS depth,
         CAST(patient_id AS STRING) AS path
     FROM `topd-lab.dbt_marts.dim_patients`
-    WHERE referrer_patient_id IS NULL  -- hypothetical column
+    WHERE referrer_patient_id IS NULL
 
     UNION ALL
 
-    -- Recursive: join referred patients to their referrers
+    -- Recursive: une pacientes referidos con sus referrers
     SELECT
         p.patient_id,
         p.referrer_patient_id,
@@ -166,17 +146,15 @@ WITH RECURSIVE referral_chain AS (
     FROM `topd-lab.dbt_marts.dim_patients` AS p
     JOIN referral_chain AS rc
         ON p.referrer_patient_id = rc.patient_id
-    WHERE rc.depth < 5  -- prevent infinite loops
+    WHERE rc.depth < 5
 )
 SELECT patient_id, depth, path
 FROM referral_chain
 ORDER BY depth, patient_id;
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 9. STRING_AGG: concatenate values within a group
--- ─────────────────────────────────────────────────────────────────────────────
--- Specialties visited by each patient as a comma-separated string:
+-- 9. STRING_AGG: concatenar valores dentro de un grupo.
+-- Especialidades visitadas por cada paciente como string separado por comas:
 SELECT
     patient_id,
     COUNT(DISTINCT specialty_id)                        AS distinct_specialties,
@@ -190,9 +168,7 @@ ORDER BY distinct_specialties DESC
 LIMIT 20;
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 10. Percentile / median revenue per specialty using APPROX_QUANTILES
--- ─────────────────────────────────────────────────────────────────────────────
+-- 10. Percentile / median revenue por especialidad con APPROX_QUANTILES.
 SELECT
     s.specialty_name,
     COUNT(*)                                                AS total_payments,

@@ -1,29 +1,29 @@
 -- MART CORE: fct_appointments
 --
--- Tabla de hechos de citas. Corazón del modelo dimensional.
--- Una fila por cita. Contiene métricas numéricas y FKs a dimensiones.
+-- Tabla de hechos de citas. Una fila por cita.
 --
--- PARTICIONADO por appointment_date:
--- BigQuery escanea solo las particiones que coinciden con el filtro WHERE.
--- Si filtras por fecha (lo más común en dashboards), reduces bytes escaneados
--- hasta en un 99%. Coste directo.
+-- Materialization: incremental con estrategia 'merge'.
+--   - Primer run: materializa la tabla entera.
+--   - Runs siguientes: solo procesa filas con updated_at posterior al máximo
+--     ya cargado, y hace upsert por appointment_id (las citas pueden cambiar
+--     de status: scheduled -> completed -> cancelled).
+--   - Para forzar reproceso completo: dbt run --select fct_appointments --full-refresh
 --
--- CLUSTERIZADO por country_id, specialty_id, status:
--- Dentro de cada partición, BigQuery ordena físicamente los datos por estos
--- campos. Las queries con filtros en estas columnas son más rápidas y baratas.
---
--- Partición: columna de fecha con filtros frecuentes de rango temporal.
--- Clustering: columnas de alta cardinalidad usadas en WHERE o GROUP BY.
+-- Partition: appointment_date (MONTH) para reducir bytes escaneados.
+-- Cluster: country_id, specialty_id, status para acelerar filtros en dashboards.
 
 {{
     config(
-        materialized='table',
+        materialized='incremental',
+        unique_key='appointment_id',
+        incremental_strategy='merge',
         partition_by={
             'field': 'appointment_date',
             'data_type': 'date',
             'granularity': 'month'
         },
-        cluster_by=['country_id', 'specialty_id', 'status']
+        cluster_by=['country_id', 'specialty_id', 'status'],
+        on_schema_change='append_new_columns'
     )
 }}
 
@@ -31,15 +31,34 @@ with appointments as (
     select * from {{ ref('int_appointments_enriched') }}
 ),
 
--- En desarrollo limitamos datos para ahorrar coste
-{% if var('is_dev', true) %}
+{% if var('is_dev', false) %}
+date_anchor as (
+    select date_sub(max(date(appointment_start_at)),
+                    interval {{ var('dev_window_days', 90) }} day) as min_date
+    from appointments
+),
 filtered as (
-    select * from appointments
-    where date(appointment_start_at) >= date_sub(current_date(), interval 90 day)
+    select a.* from appointments a
+    cross join date_anchor d
+    where date(a.appointment_start_at) >= d.min_date
 ),
 {% else %}
 filtered as (
     select * from appointments
+),
+{% endif %}
+
+{% if is_incremental() %}
+-- Solo procesa filas modificadas desde el último run.
+-- {{ this }} se resuelve a la tabla destino actual.
+incremental_filter as (
+    select * from filtered
+    where updated_at > (select coalesce(max(updated_at), timestamp('1970-01-01'))
+                        from {{ this }})
+),
+{% else %}
+incremental_filter as (
+    select * from filtered
 ),
 {% endif %}
 
@@ -68,7 +87,7 @@ final as (
         payment_status,
         is_missing_payment
 
-    from filtered
+    from incremental_filter
 )
 
 select * from final

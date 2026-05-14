@@ -63,7 +63,7 @@ final as (
         p.patient_id,
         p.acquisition_channel,
         p.country_id,
-        -- Mes de registro → cohorte para retention analysis
+        -- Mes de registro -> cohorte para retention analysis
         date_trunc(date(p.created_at), month)              as cohort_month,
         m.*
 

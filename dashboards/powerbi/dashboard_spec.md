@@ -1,4 +1,4 @@
-﻿# Power BI Dashboard Spec — MediConnect Executive Dashboard
+# Power BI Dashboard Spec - MediConnect Executive Dashboard
 
 ## Fuentes de datos
 
@@ -11,7 +11,7 @@
 | `mart_appointment_quality` | `dbt_marts` | No-show rate por canal |
 
 **Conexión:** BigQuery connector nativo en Power BI Desktop.
-`Obtener datos → Google BigQuery → Proyecto: topd-lab → Dataset: dbt_marts`
+`Obtener datos -> Google BigQuery -> Proyecto: topd-lab -> Dataset: dbt_marts`
 
 ---
 
@@ -21,10 +21,10 @@
 Vista de negocio de alto nivel para C-level. Una pantalla, sin scroll.
 
 ### KPI Cards (fila superior)
-- **Revenue MTD** — `SUM(daily_revenue_eur)` filtrado al mes actual
-- **Citas completadas MTD** — `SUM(completed_appointments)` mes actual
-- **Lead conversion rate** — `AVG(lead_conversion_rate)` últimos 30 días
-- **No-show rate** — `AVG(1 - completion_rate)` últimos 30 días
+- **Revenue MTD** - `SUM(daily_revenue_eur)` filtrado al mes actual
+- **Citas completadas MTD** - `SUM(completed_appointments)` mes actual
+- **Lead conversion rate** - `AVG(lead_conversion_rate)` últimos 30 días
+- **No-show rate** - `AVG(1 - completion_rate)` últimos 30 días
 
 Formato: número grande + variación % vs mes anterior (condicional: verde si mejora, rojo si empeora)
 
@@ -104,7 +104,7 @@ DIVIDE(
 
 ## Guía de publicación
 
-1. Power BI Desktop → Publicar → Workspace "MediConnect Analytics"
+1. Power BI Desktop -> Publicar -> Workspace "MediConnect Analytics"
 2. Configurar actualización programada: diaria a las 06:00 UTC
 3. Configurar gateway si los datos están on-premise (no aplica para BigQuery directo)
 4. Compartir enlace al dashboard con el equipo

@@ -1,4 +1,4 @@
-﻿# Metabase Dashboard Blueprint — MediConnect
+# Metabase Dashboard Blueprint - MediConnect
 
 ## ¿Por qué Metabase?
 
@@ -8,13 +8,13 @@ Ideal para equipos de datos pequeños que quieren mover rápido.
 
 ## Conexión con BigQuery
 
-1. **Settings → Databases → Add database → BigQuery**
+1. **Settings -> Databases -> Add database -> BigQuery**
 2. Campos requeridos:
    - Display name: `MediConnect Production`
    - Project ID: `topd-lab`
    - Dataset filters: `dbt_marts` (limitar a sólo los marts, no raw)
    - Service account JSON: pegar el contenido del archivo de clave
-3. **Save** → Metabase inicia el sync de tablas (~2 min)
+3. **Save** -> Metabase inicia el sync de tablas (~2 min)
 
 ---
 
@@ -97,7 +97,7 @@ Visual: Table con conditional formatting (verde > 30%, amarillo 15-30%, rojo < 1
 - **Filtro de país**: conectado a `agg_monthly_country_kpis.country_id`
 - **Filtro de especialidad**: conectado a `agg_specialty_performance.specialty_id`
 
-En Metabase, los filtros de dashboard se configuran en "Edit dashboard" → "Add a filter".
+En Metabase, los filtros de dashboard se configuran en "Edit dashboard" -> "Add a filter".
 Cada pregunta/query debe mapear el filtro a su columna correspondiente.
 
 ---
@@ -105,7 +105,7 @@ Cada pregunta/query debe mapear el filtro a su columna correspondiente.
 ## Actualizaciones automáticas
 
 Metabase tiene caché de queries configurable:
-- **Settings → Caching**: activar caché con TTL de 24 horas para queries costosas
+- **Settings -> Caching**: activar caché con TTL de 24 horas para queries costosas
 - **Pulses** (alertas): notificación por email/Slack si KPI < threshold
   - Ejemplo: alerta si `no_show_rate > 15%` en el día anterior
 
@@ -116,7 +116,7 @@ Metabase tiene caché de queries configurable:
 | Dimension | Metabase | Power BI |
 |---|---|---|
 | Licencia | Open-source / cloud barato | Desktop gratis, Service requiere licencia |
-| Curva de aprendizaje | Baja — GUI intuitiva | Media — DAX añade complejidad |
+| Curva de aprendizaje | Baja - GUI intuitiva | Media - DAX añade complejidad |
 | Queries nativas | SQL directo en UI | Requiere modo experto o DAX |
 | BigQuery | Conector nativo | Conector nativo |
 | Alertas | Pulses incluidas | Power BI Alerts incluidas |

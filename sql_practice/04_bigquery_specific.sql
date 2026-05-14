@@ -1,14 +1,9 @@
-﻿-- =============================================================================
--- 04_bigquery_specific.sql  ·  BigQuery vs PostgreSQL
--- =============================================================================
+-- 04_bigquery_specific.sql: BigQuery vs PostgreSQL
 -- COUNTIF, SAFE_DIVIDE, QUALIFY, DATE_TRUNC/DIFF, GENERATE_DATE_ARRAY,
--- UNNEST, partition pruning, IF, FORMAT_DATE — equivalentes PG incluidos.
--- =============================================================================
+-- UNNEST, partition pruning, IF, FORMAT_DATE. Equivalentes PG incluidos.
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 1. COUNTIF  (BigQuery) vs  COUNT FILTER  (PostgreSQL)
--- ─────────────────────────────────────────────────────────────────────────────
--- BigQuery:
+
+-- 1. COUNTIF (BigQuery) vs COUNT FILTER (PostgreSQL)
 SELECT
     DATE_TRUNC(appointment_date, MONTH)         AS month,
     COUNTIF(status = 'completed')               AS completed,
@@ -22,10 +17,8 @@ GROUP BY month;
 -- O también: COUNT(CASE WHEN status = 'completed' THEN 1 END)
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 2. SAFE_DIVIDE  (BigQuery) vs  / NULLIF  (PostgreSQL)
--- ─────────────────────────────────────────────────────────────────────────────
--- BigQuery devuelve NULL si el denominador es 0 (no error):
+-- 2. SAFE_DIVIDE (BigQuery) vs / NULLIF (PostgreSQL)
+-- BigQuery devuelve NULL si el denominador es 0, sin error.
 SELECT
     specialty_id,
     COUNT(*)                                    AS total_appointments,
@@ -36,12 +29,10 @@ SELECT
 FROM `topd-lab.dbt_marts.fct_appointments`
 GROUP BY specialty_id;
 
--- PostgreSQL:  completed::numeric / NULLIF(total, 0)
+-- PostgreSQL: completed::numeric / NULLIF(total, 0)
 
 
--- ─────────────────────────────────────────────────────────────────────────────
 -- 3. QUALIFY: filtrar por window function sin subquery
--- ─────────────────────────────────────────────────────────────────────────────
 -- El médico top por revenue en cada especialidad:
 WITH doctor_rev AS (
     SELECT
@@ -61,15 +52,12 @@ QUALIFY RANK() OVER (PARTITION BY specialty_id ORDER BY revenue_eur DESC) = 1;
 -- SELECT * FROM (SELECT ..., RANK() OVER (...) AS rnk FROM doctor_rev) WHERE rnk = 1
 
 
--- ─────────────────────────────────────────────────────────────────────────────
 -- 4. DATE_TRUNC y DATE_DIFF
--- ─────────────────────────────────────────────────────────────────────────────
 SELECT
     appointment_id,
     appointment_date,
     DATE_TRUNC(appointment_date, MONTH)     AS month,
     DATE_TRUNC(appointment_date, YEAR)      AS year,
-    -- DATE_DIFF(end, start, unit)
     DATE_DIFF(CURRENT_DATE(), appointment_date, DAY)    AS days_ago,
     DATE_DIFF(CURRENT_DATE(), appointment_date, MONTH)  AS months_ago
 FROM `topd-lab.dbt_marts.fct_appointments`
@@ -80,10 +68,7 @@ LIMIT 10;
 -- (CURRENT_DATE - appointment_date)      -- devuelve interval, no integer
 
 
--- ─────────────────────────────────────────────────────────────────────────────
 -- 5. GENERATE_DATE_ARRAY y UNNEST
--- ─────────────────────────────────────────────────────────────────────────────
--- Generar un rango de fechas sin CTE recursiva:
 SELECT date
 FROM UNNEST(
     GENERATE_DATE_ARRAY('2023-01-01', '2023-12-31', INTERVAL 1 MONTH)
@@ -96,27 +81,20 @@ CROSS JOIN UNNEST(tags) AS tag   -- si tags fuera un campo ARRAY<STRING>
 WHERE tags IS NOT NULL;
 
 
--- ─────────────────────────────────────────────────────────────────────────────
 -- 6. Particionamiento y clustering: cómo afectan a los queries
--- ─────────────────────────────────────────────────────────────────────────────
 -- fct_appointments está particionada por appointment_date (MONTH)
 -- y tiene clustering en [country_id, specialty_id, status].
 
--- Esta query sólo escanea las particiones de 2024 → menos bytes → menor coste:
+-- Esta query solo escanea las particiones de 2024 (partition pruning + clustering):
 SELECT COUNT(*), SUM(amount_eur)
 FROM `topd-lab.dbt_marts.fct_payments`
-WHERE payment_date >= '2024-01-01'          -- partition pruning
-  AND country_id = 'ES'                     -- clustering benefit
+WHERE payment_date >= '2024-01-01'
+  AND country_id = 'ES'
   AND payment_status = 'paid';
 
--- Para ver cuántos bytes escanea una query: usa "Ejecutar → Bytes procesados"
--- en BigQuery Console antes de ejecutar con CTRL+Mayús para ver el estimado.
 
-
--- ─────────────────────────────────────────────────────────────────────────────
 -- 7. IF y CASE: expresiones condicionales
--- ─────────────────────────────────────────────────────────────────────────────
--- IF(condición, valor_si_true, valor_si_false) — sólo BigQuery
+-- IF(condición, valor_si_true, valor_si_false). Solo BigQuery.
 SELECT
     appointment_id,
     status,
@@ -134,15 +112,13 @@ LEFT JOIN `topd-lab.dbt_marts.fct_payments` USING (appointment_id)
 LIMIT 20;
 
 
--- ─────────────────────────────────────────────────────────────────────────────
 -- 8. FORMAT_DATE y PARSE_DATE
--- ─────────────────────────────────────────────────────────────────────────────
 SELECT
     appointment_date,
-    FORMAT_DATE('%Y-%m', appointment_date)      AS year_month_str,   -- '2023-06'
-    FORMAT_DATE('%B %Y', appointment_date)      AS month_name,       -- 'June 2023'
-    FORMAT_DATE('%Q', appointment_date)         AS quarter_number,   -- '2'
+    FORMAT_DATE('%Y-%m', appointment_date)      AS year_month_str,
+    FORMAT_DATE('%B %Y', appointment_date)      AS month_name,
+    FORMAT_DATE('%Q', appointment_date)         AS quarter_number,
     CONCAT('Q', FORMAT_DATE('%Q', appointment_date),
-           '-', FORMAT_DATE('%Y', appointment_date)) AS quarter_label -- 'Q2-2023'
+           '-', FORMAT_DATE('%Y', appointment_date)) AS quarter_label
 FROM `topd-lab.dbt_marts.fct_appointments`
 LIMIT 5;

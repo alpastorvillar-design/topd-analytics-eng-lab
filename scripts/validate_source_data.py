@@ -1,4 +1,4 @@
-﻿"""
+"""
 validate_source_data.py
 
 Valida la calidad de los datos en BigQuery antes de ejecutar dbt.
@@ -60,11 +60,11 @@ def run_check(check: Check) -> CheckResult:
     return CheckResult(check=check, row_count=n, passed=passed, sample_rows=sample_rows)
 
 
-# ── Definición de checks ──────────────────────────────────────────────────────
+# ── Definición de checks 
 
 def make_checks(ds: str) -> list[Check]:
     return [
-        # ── Unicidad de PKs ───────────────────────────────────────────────
+        # ── Unicidad de PKs 
         Check(
             name="pk_specialties_unique",
             description="specialty_id debe ser único",
@@ -116,7 +116,7 @@ def make_checks(ds: str) -> list[Check]:
             """,
         ),
 
-        # ── Integridad referencial ────────────────────────────────────────
+        # ── Integridad referencial 
         Check(
             name="fk_appointments_patient",
             description="Todas las citas deben tener un patient_id válido",
@@ -158,7 +158,7 @@ def make_checks(ds: str) -> list[Check]:
             """,
         ),
 
-        # ── Valores aceptados ─────────────────────────────────────────────
+        # ── Valores aceptados 
         Check(
             name="appointment_status_values",
             description="appointment.status debe ser uno de: completed, cancelled, no_show, scheduled",
@@ -187,7 +187,7 @@ def make_checks(ds: str) -> list[Check]:
             """,
         ),
 
-        # ── Rangos y coherencia temporal ──────────────────────────────────
+        # ── Rangos y coherencia temporal 
         Check(
             name="payment_amount_positive",
             description="amount_cents debe ser > 0",
@@ -207,7 +207,7 @@ def make_checks(ds: str) -> list[Check]:
             """,
         ),
 
-        # ── Conteos esperados (no-zero checks) ────────────────────────────
+        # ── Conteos esperados (no-zero checks) 
         Check(
             name="row_count_specialties",
             description="Debe haber exactamente 20 especialidades",
@@ -278,7 +278,7 @@ def main() -> None:
                 print(f"  ✗ {r.check.name}: {r.check.description}")
         raise SystemExit(1)
     else:
-        print("\n✓ Todos los checks pasan. Listo para dbt run.")
+        print("\n Todos los checks pasan. Listo para dbt run.")
 
 
 if __name__ == "__main__":

@@ -1,8 +1,8 @@
-﻿# Tableau Dashboard Spec — MediConnect
+# Tableau Dashboard Spec - MediConnect
 
 ## Data Sources
 
-Connect via **Tableau Desktop → Connect → Google BigQuery** (or use CSV extracts from `data/generated/`).
+Connect via **Tableau Desktop -> Connect -> Google BigQuery** (or use CSV extracts from `data/generated/`).
 
 | Exported CSV | BQ table equivalent |
 |---|---|
@@ -34,8 +34,8 @@ Use **BANs** (Big Ass Numbers) at the top:
 ## Dashboard 2: Country Performance
 
 ### Filled Map
-- Geographic role: `[Country Name]` → Country/Region
-- Color: `SUM([Total Revenue Eur])` — sequential blue palette
+- Geographic role: `[Country Name]` -> Country/Region
+- Color: `SUM([Total Revenue Eur])` - sequential blue palette
 - Size: `SUM([Unique Patients])`
 - Tooltip: revenue, completion rate, active doctors
 
@@ -55,7 +55,7 @@ The `mart_patient_retention` table has one row per `cohort_month × months_since
 - Rows: `[Cohort Month]` (discrete, formatted as YYYY-MM)
 - Columns: `[Months Since Acquisition]` (discrete: 0,1,2,3,4,5)
 - Mark: Square
-- Color: `SUM([Retention Rate])` — diverging palette (red → green)
+- Color: `SUM([Retention Rate])` - diverging palette (red -> green)
 - Label: `SUM([Retention Rate])` formatted as percentage
 
 ### Calculated Field: Retention %

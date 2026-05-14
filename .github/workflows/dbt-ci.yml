@@ -1,0 +1,68 @@
+name: dbt CI
+
+on:
+  pull_request:
+    paths:
+      - "dbt_mediconnect/**"
+      - "sql_practice/**"
+      - ".sqlfluff"
+      - ".github/workflows/dbt-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "dbt_mediconnect/**"
+      - "sql_practice/**"
+
+jobs:
+  lint-and-parse:
+    name: sqlfluff lint + dbt parse
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dbt + sqlfluff
+        run: |
+          python -m pip install --upgrade pip
+          pip install \
+            dbt-core==1.8.* \
+            dbt-bigquery==1.8.* \
+            sqlfluff==3.* \
+            sqlfluff-templater-dbt==3.*
+
+      - name: Stub profiles.yml (no BQ connection needed for parse)
+        run: |
+          mkdir -p ~/.dbt
+          cat > ~/.dbt/profiles.yml <<'EOF'
+          mediconnect:
+            target: ci
+            outputs:
+              ci:
+                type: bigquery
+                method: oauth
+                project: topd-lab
+                dataset: dbt_ci
+                location: EU
+                threads: 1
+          EOF
+
+      - name: dbt deps
+        working-directory: dbt_mediconnect
+        run: dbt deps
+
+      - name: dbt parse
+        working-directory: dbt_mediconnect
+        run: dbt parse
+
+      - name: sqlfluff lint (dbt models)
+        working-directory: dbt_mediconnect
+        run: sqlfluff lint models/ snapshots/ --dialect bigquery
+
+      - name: sqlfluff lint (sql_practice)
+        run: sqlfluff lint sql_practice/ --dialect bigquery --templater raw

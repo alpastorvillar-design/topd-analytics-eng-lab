@@ -4,7 +4,7 @@ generate_synthetic_healthcare_data.py
 Genera datos sintéticos realistas para el marketplace eHealth MediConnect.
 Produce 7 CSVs en data/raw/ con integridad referencial garantizada.
 
-Volumen: ~2000 pacientes, ~300 médicos, ~8000 citas, ~5500 pagos, ~6000 leads.
+Volumen: ~15k pacientes, ~500 médicos, ~60k citas, ~39k pagos, ~100k leads.
 
 Ejecutar:
     python scripts/generate_synthetic_healthcare_data.py
@@ -29,13 +29,13 @@ fake.seed_instance(42)
 OUTPUT_DIR = Path("data/raw")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-# ── Parámetros de volumen ────────────────────────────────────────────────────
+# Parámetros de volumen
 N_SPECIALTIES = 20
 N_COUNTRIES = 8
-N_DOCTORS = 300
-N_PATIENTS = 2000
-N_APPOINTMENTS = 8000
-N_LEADS = 6000
+N_DOCTORS = 500
+N_PATIENTS = 15000
+N_APPOINTMENTS = 60000
+N_LEADS = 100000
 
 DATE_START = date(2022, 1, 1)
 DATE_END = date(2024, 12, 31)
@@ -52,7 +52,7 @@ def random_ts(start: date, end: date) -> datetime:
                     random.randint(8, 20), random.randint(0, 59))
 
 
-# ── 1. SPECIALTIES ───────────────────────────────────────────────────────────
+# 1. SPECIALTIES
 print("Generando specialties...")
 
 specialty_names = [
@@ -88,12 +88,12 @@ for i, (name, group) in enumerate(specialty_names, 1):
 
 df_specialties = pd.DataFrame(specialties)
 df_specialties.to_csv(OUTPUT_DIR / "specialties.csv", index=False)
-print(f"  → {len(df_specialties)} specialties")
+print(f"  {len(df_specialties)} specialties")
 
 specialty_ids = df_specialties["specialty_id"].tolist()
 
 
-# ── 2. COUNTRIES ─────────────────────────────────────────────────────────────
+# 2. COUNTRIES
 print("Generando countries...")
 
 countries_data = [
@@ -114,13 +114,13 @@ countries = [
 
 df_countries = pd.DataFrame(countries)
 df_countries.to_csv(OUTPUT_DIR / "countries.csv", index=False)
-print(f"  → {len(df_countries)} countries")
+print(f"  {len(df_countries)} countries")
 
 country_ids = df_countries["country_id"].tolist()
 country_currencies = dict(zip(df_countries["country_id"], df_countries["currency"]))
 
 
-# ── 3. DOCTORS ───────────────────────────────────────────────────────────────
+# 3. DOCTORS
 print("Generando doctors...")
 
 doctors = []
@@ -142,13 +142,13 @@ for i in range(1, N_DOCTORS + 1):
 
 df_doctors = pd.DataFrame(doctors)
 df_doctors.to_csv(OUTPUT_DIR / "doctors.csv", index=False)
-print(f"  → {len(df_doctors)} doctors")
+print(f"  {len(df_doctors)} doctors")
 
 doctor_ids = df_doctors["doctor_id"].tolist()
 doctor_info = df_doctors.set_index("doctor_id")[["specialty_id", "country_id"]].to_dict("index")
 
 
-# ── 4. PATIENTS ──────────────────────────────────────────────────────────────
+# 4. PATIENTS
 print("Generando patients...")
 
 acquisition_channels = ["seo", "sem", "direct", "referral", "social", "email"]
@@ -173,13 +173,13 @@ for i in range(1, N_PATIENTS + 1):
 
 df_patients = pd.DataFrame(patients)
 df_patients.to_csv(OUTPUT_DIR / "patients.csv", index=False)
-print(f"  → {len(df_patients)} patients")
+print(f"  {len(df_patients)} patients")
 
 patient_ids = df_patients["patient_id"].tolist()
 patient_created = dict(zip(df_patients["patient_id"], df_patients["created_at"]))
 
 
-# ── 5. APPOINTMENTS ──────────────────────────────────────────────────────────
+# 5. APPOINTMENTS
 print("Generando appointments...")
 
 # Distribución realista de estados
@@ -233,14 +233,14 @@ for i in range(1, N_APPOINTMENTS + 1):
 
 df_appointments = pd.DataFrame(appointments)
 df_appointments.to_csv(OUTPUT_DIR / "appointments.csv", index=False)
-print(f"  → {len(df_appointments)} appointments")
+print(f"  {len(df_appointments)} appointments")
 
 completed_appt_ids = df_appointments[
     df_appointments["status"] == "completed"
 ]["appointment_id"].tolist()
 
 
-# ── 6. PAYMENTS ──────────────────────────────────────────────────────────────
+# 6. PAYMENTS
 print("Generando payments...")
 
 payment_methods = ["credit_card", "debit_card", "bank_transfer", "paypal"]
@@ -256,9 +256,13 @@ specialty_price_range = {
 }
 default_price_range = (3000, 20000)
 
-payments = []
+# Indices precalculados: O(1) por lookup en vez de O(n) escaneando el DataFrame.
+# A 60k filas la diferencia es de horas a segundos.
 appt_doctor = dict(zip(df_appointments["appointment_id"], df_appointments["doctor_id"]))
+appt_patient = dict(zip(df_appointments["appointment_id"], df_appointments["patient_id"]))
+appt_start = dict(zip(df_appointments["appointment_id"], df_appointments["appointment_start_at"]))
 
+payments = []
 for i, appt_id in enumerate(completed_appt_ids, 1):
     doctor_id = appt_doctor[appt_id]
     specialty = doctor_info[doctor_id]["specialty_id"]
@@ -267,8 +271,7 @@ for i, appt_id in enumerate(completed_appt_ids, 1):
     price_min, price_max = specialty_price_range.get(specialty, default_price_range)
     amount = random.randint(price_min, price_max)
 
-    appt_row = df_appointments[df_appointments["appointment_id"] == appt_id].iloc[0]
-    payment_ts = appt_row["appointment_start_at"] + timedelta(hours=random.randint(1, 24))
+    payment_ts = appt_start[appt_id] + timedelta(hours=random.randint(1, 24))
 
     # 85% pagado, 8% reembolsado, 5% fallido, 2% pendiente
     pay_status = random.choices(
@@ -279,7 +282,7 @@ for i, appt_id in enumerate(completed_appt_ids, 1):
     payments.append({
         "payment_id": f"PAY{i:06d}",
         "appointment_id": appt_id,
-        "patient_id": appt_row["patient_id"],
+        "patient_id": appt_patient[appt_id],
         "doctor_id": doctor_id,
         "payment_created_at": payment_ts,
         "updated_at": payment_ts + timedelta(hours=random.randint(0, 6)),
@@ -291,10 +294,10 @@ for i, appt_id in enumerate(completed_appt_ids, 1):
 
 df_payments = pd.DataFrame(payments)
 df_payments.to_csv(OUTPUT_DIR / "payments.csv", index=False)
-print(f"  → {len(df_payments)} payments")
+print(f"  {len(df_payments)} payments")
 
 
-# ── 7. LEADS ─────────────────────────────────────────────────────────────────
+# 7. LEADS
 print("Generando leads...")
 
 lead_sources = ["seo", "sem", "direct", "referral", "social", "email"]
@@ -317,12 +320,9 @@ for i in range(1, N_LEADS + 1):
         lead_status = "converted"
         converted_appt_id = convertible_appts[appt_idx]
         appt_idx += 1
-        # Paciente del appointment
-        appt_row = df_appointments[
-            df_appointments["appointment_id"] == converted_appt_id
-        ].iloc[0]
-        patient_id = appt_row["patient_id"]
-        doctor_id = appt_row["doctor_id"]
+        # Paciente y médico del appointment (lookup O(1))
+        patient_id = appt_patient[converted_appt_id]
+        doctor_id = appt_doctor[converted_appt_id]
     else:
         lead_status = random.choices(
             ["new", "contacted", "lost"],
@@ -346,11 +346,11 @@ for i in range(1, N_LEADS + 1):
 
 df_leads = pd.DataFrame(leads)
 df_leads.to_csv(OUTPUT_DIR / "leads.csv", index=False)
-print(f"  → {len(df_leads)} leads")
+print(f"  {len(df_leads)} leads")
 
 
-# ── Resumen ──────────────────────────────────────────────────────────────────
-print("\n✓ Datos generados en data/raw/")
+# Resumen
+print("\nDatos generados en data/raw/")
 print(f"  specialties:  {len(df_specialties):>6}")
 print(f"  countries:    {len(df_countries):>6}")
 print(f"  doctors:      {len(df_doctors):>6}")

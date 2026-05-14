@@ -1,7 +1,7 @@
-# Tableau — Calculated Fields Reference
+# Tableau - Calculated Fields Reference
 
 Calculated fields to create inside Tableau when the mart doesn't already have the metric pre-built.
-For most KPIs, the marts already have the value — these are for in-viz formatting and drill-down flexibility.
+For most KPIs, the marts already have the value - these are for in-viz formatting and drill-down flexibility.
 
 ---
 
@@ -13,7 +13,7 @@ For most KPIs, the marts already have the value — these are for in-viz formatt
 
 // Revenue MoM % change
 // Requires a table calc: use "Percent Difference From" on date dimension
-// Table Calculation → Percent Difference → Along: month
+// Table Calculation -> Percent Difference -> Along: month
 
 // Revenue MTD (using LOD)
 { FIXED [appointment_date] : SUM([amount_eur]) }
@@ -77,7 +77,7 @@ END
 ```
 
 For the heatmap: Rows = `cohort_month`, Columns = Month Offset (1–6), Color = retention rate.
-Mark type: **Square**. Color palette: Sequential (white → blue or white → green).
+Mark type: **Square**. Color palette: Sequential (white -> blue or white -> green).
 
 ---
 
@@ -108,7 +108,7 @@ SUM([total_appointments]) / TOTAL(SUM([total_appointments]))
 
 ---
 
-## Tableau vs Power BI — Key Differences in Practice
+## Tableau vs Power BI - Key Differences in Practice
 
 | Task | Tableau | Power BI |
 |------|---------|----------|

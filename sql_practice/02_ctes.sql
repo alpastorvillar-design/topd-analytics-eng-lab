@@ -1,13 +1,9 @@
-﻿-- =============================================================================
--- 02_ctes.sql  ·  CTEs y subqueries
--- =============================================================================
--- CTE vs subquery anidada, CTEs encadenadas (patrón dbt), NOT EXISTS,
+-- 02_ctes.sql: CTEs y subqueries
+-- CTE vs subquery, CTEs encadenadas (patrón dbt), NOT EXISTS,
 -- series de fechas con GENERATE_DATE_ARRAY, QUALIFY con subquery inline.
--- =============================================================================
 
--- ─────────────────────────────────────────────────────────────────────────────
--- CTE vs subquery
--- ─────────────────────────────────────────────────────────────────────────────
+
+-- 1. CTE vs subquery
 
 -- Con subquery anidada (difícil de mantener):
 SELECT doctor_id, total_revenue
@@ -34,9 +30,7 @@ WHERE total_revenue > 5000
 ORDER BY total_revenue DESC;
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- CTEs encadenadas: pipeline de transformaciones (patrón dbt)
--- ─────────────────────────────────────────────────────────────────────────────
+-- 2. CTEs encadenadas: pipeline de transformaciones (patrón dbt)
 WITH
 
 appointments_enriched AS (
@@ -97,9 +91,7 @@ LEFT JOIN doctor_revenue        AS r USING (doctor_id)
 ORDER BY total_revenue_eur DESC;
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- NOT EXISTS: más robusto que NOT IN cuando puede haber NULLs
--- ─────────────────────────────────────────────────────────────────────────────
+-- 3. NOT EXISTS frente a NOT IN cuando puede haber NULLs
 -- NOT IN devuelve 0 filas si la subquery contiene algún NULL.
 -- NOT EXISTS es seguro con NULLs y generalmente más eficiente.
 
@@ -114,9 +106,7 @@ WHERE NOT EXISTS (
 );
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- Generar serie de fechas (dos enfoques)
--- ─────────────────────────────────────────────────────────────────────────────
+-- 4. Generar serie de fechas (dos enfoques)
 
 -- Opción A: CTE recursiva (compatible con PostgreSQL)
 WITH RECURSIVE date_series AS (
@@ -153,9 +143,7 @@ LEFT JOIN daily_revenue AS r ON d.date = r.payment_date
 ORDER BY d.date;
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- Canal con más no-shows por especialidad (QUALIFY + subquery inline)
--- ─────────────────────────────────────────────────────────────────────────────
+-- 5. Canal con más no-shows por especialidad (QUALIFY + subquery inline)
 SELECT
     specialty_id,
     channel,

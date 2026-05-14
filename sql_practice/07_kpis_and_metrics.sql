@@ -1,14 +1,9 @@
--- =============================================================================
--- 07_kpis_and_metrics.sql  ·  Business KPIs & metric patterns
--- =============================================================================
--- Revenue metrics, period-over-period growth, LTV, retention rates,
--- funnel conversion, supply/demand ratios. All against the mart layer.
--- =============================================================================
+-- 07_kpis_and_metrics.sql: KPIs de negocio y patrones de métrica
+-- Revenue metrics, period-over-period growth, LTV, retención,
+-- conversión de funnel, supply/demand. Todo contra la capa de marts.
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 1. Core revenue KPIs with MoM, YoY and running total
--- ─────────────────────────────────────────────────────────────────────────────
+-- 1. Core revenue KPIs con MoM, YoY y running total
 WITH monthly_revenue AS (
     SELECT
         DATE_TRUNC(payment_date, MONTH)                 AS month,
@@ -38,9 +33,7 @@ FROM monthly_revenue
 ORDER BY month;
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 2. Revenue MTD, QTD, YTD using date anchors
--- ─────────────────────────────────────────────────────────────────────────────
+-- 2. Revenue MTD, QTD, YTD usando anclas de fecha
 SELECT
     ROUND(SUM(CASE WHEN payment_date >= DATE_TRUNC(CURRENT_DATE(), MONTH)
                    THEN amount_eur ELSE 0 END), 2)      AS revenue_mtd,
@@ -53,9 +46,7 @@ FROM `topd-lab.dbt_marts.fct_payments`
 WHERE payment_status = 'paid';
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 3. Completion rate, no-show rate, cancellation rate by channel and month
--- ─────────────────────────────────────────────────────────────────────────────
+-- 3. Completion rate, no-show rate, cancellation rate por canal y mes
 SELECT
     DATE_TRUNC(appointment_date, MONTH)                 AS month,
     channel,
@@ -71,9 +62,7 @@ GROUP BY month, channel
 ORDER BY month DESC, total_appointments DESC;
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 4. Patient LTV: revenue + appointment frequency + active lifespan
--- ─────────────────────────────────────────────────────────────────────────────
+-- 4. LTV del paciente: revenue + frecuencia de citas + lifespan activo
 WITH patient_revenue AS (
     SELECT
         a.patient_id,
@@ -100,9 +89,7 @@ FROM patient_revenue
 ORDER BY ltv_eur DESC;
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 5. Lead-to-revenue funnel with conversion rates per stage
--- ─────────────────────────────────────────────────────────────────────────────
+-- 5. Funnel lead-to-revenue con conversión por etapa
 WITH leads AS (
     SELECT DATE_TRUNC(created_at, MONTH) AS month, COUNT(*) AS total_leads
     FROM `topd-lab.dbt_marts.fct_leads`
@@ -134,10 +121,8 @@ LEFT JOIN paid      AS p USING (month)
 ORDER BY l.month;
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 6. Doctor utilisation: booked slots vs available capacity
---    (proxy: completed / (completed + no_show + cancelled) per month)
--- ─────────────────────────────────────────────────────────────────────────────
+-- 6. Utilización de médicos: slots reservados vs capacidad disponible
+--    Proxy: completed / (completed + no_show + cancelled) por mes.
 SELECT
     DATE_TRUNC(appointment_date, MONTH)                 AS month,
     d.specialty_id,
@@ -156,9 +141,7 @@ GROUP BY month, d.specialty_id
 ORDER BY month DESC, total_slots DESC;
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 7. Cohort retention — month 0 through month 6 in one query
--- ─────────────────────────────────────────────────────────────────────────────
+-- 7. Cohort retention: M0 a M6 en una sola query
 WITH first_appt AS (
     SELECT patient_id, DATE_TRUNC(MIN(appointment_date), MONTH) AS cohort_month
     FROM `topd-lab.dbt_marts.fct_appointments`
@@ -202,9 +185,7 @@ GROUP BY ca.cohort_month, cs.cohort_size
 ORDER BY ca.cohort_month;
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 8. Supply vs demand by specialty and country
--- ─────────────────────────────────────────────────────────────────────────────
+-- 8. Supply vs demand por especialidad y país
 WITH demand AS (
     SELECT
         DATE_TRUNC(appointment_date, MONTH)             AS month,

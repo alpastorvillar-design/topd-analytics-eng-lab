@@ -1,0 +1,47 @@
+[sqlfluff]
+dialect = bigquery
+templater = jinja
+max_line_length = 120
+exclude_rules = LT05, LT09, ST06, AM04, RF02, RF03, CV02, CV11
+
+# LT05: long lines - relaxed because of aligned column comments
+# LT09: select_targets singleline (we like multi-line selects)
+# ST06: positional select ordering (we keep id columns first by convention)
+# AM04: ambiguous wildcard (acceptable in CTE pass-throughs)
+# RF02/RF03: column references unqualified (CTE pipelines)
+# CV02: coalesce > ifnull preference (allow both)
+# CV11: prefer specific casts (cast vs ::)
+
+[sqlfluff:indentation]
+tab_space_size = 4
+indented_joins = false
+indented_using_on = true
+
+[sqlfluff:layout:type:comma]
+spacing_before = touch
+line_position = trailing
+
+[sqlfluff:rules:capitalisation.keywords]
+capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.identifiers]
+extended_capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.functions]
+capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.literals]
+capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.types]
+extended_capitalisation_policy = lower
+
+[sqlfluff:templater:jinja]
+apply_dbt_builtins = true
+
+[sqlfluff:templater:jinja:context]
+# Stub vars so sqlfluff can resolve {{ var(...) }} without dbt context.
+is_dev = false
+dev_window_days = 90
+project_id = "topd-lab"
+bq_location = "EU"

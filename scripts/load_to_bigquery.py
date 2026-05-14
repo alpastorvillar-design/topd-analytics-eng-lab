@@ -1,4 +1,4 @@
-﻿"""
+"""
 load_to_bigquery.py
 
 Carga los CSVs de data/raw/ al dataset raw_mediconnect en BigQuery.
@@ -29,7 +29,7 @@ DATA_DIR = Path("data/raw")
 
 client = bigquery.Client(project=PROJECT_ID, location=LOCATION)
 
-# ── Esquemas explícitos ───────────────────────────────────────────────────────
+# ── Esquemas explícitos 
 # BigQuery infiere bien los tipos desde Parquet/Arrow, pero los definimos
 # explícitamente para garantizar que STRING no se convierta en INT64
 # y que los campos nullable sean NULLABLE (no REQUIRED).
@@ -148,7 +148,7 @@ def load_table(table_name: str) -> None:
         source_format=bigquery.SourceFormat.CSV,
         skip_leading_rows=1,
         null_marker="",
-        # null_marker="": las celdas vacías en CSV → NULL en BigQuery.
+        # null_marker="": las celdas vacías en CSV -> NULL en BigQuery.
         # Sin esto, los campos NULLABLE quedarían como string vacío "".
     )
 
@@ -156,7 +156,7 @@ def load_table(table_name: str) -> None:
         df, table_ref, job_config=job_config
     )
     load_job.result()  # bloquea hasta que termine
-    print(f"  ✓ {table_name}: {load_job.output_rows:,} filas cargadas")
+    print(f"   {table_name}: {load_job.output_rows:,} filas cargadas")
 
 
 def main() -> None:
@@ -168,7 +168,7 @@ def main() -> None:
     for table_name in LOAD_ORDER:
         load_table(table_name)
 
-    print("\n✓ Carga completada.")
+    print("\n Carga completada.")
     print(f"  Puedes ver las tablas en: https://console.cloud.google.com/bigquery?project={PROJECT_ID}")
 
 

@@ -1,9 +1,7 @@
-﻿-- =============================================================================
--- 06_advanced_challenges.sql  ·  Retos SQL avanzados
--- =============================================================================
+-- 06_advanced_challenges.sql: retos SQL avanzados
 -- Queries complejas que combinan múltiples técnicas: window functions,
 -- CTEs encadenadas, aggregation avanzada y análisis de funnels.
--- =============================================================================
+
 
 -- 1. Médico con más ingresos en cada especialidad
 -- Trampa habitual: GROUP BY + MAX no da el doctor_id correcto.
@@ -66,7 +64,7 @@ GROUP BY channel
 ORDER BY appointments DESC;
 
 
--- 5. Funnel completo: lead → cita → pago
+-- 5. Funnel completo: lead -> cita -> pago
 WITH funnel AS (
     SELECT
         DATE_TRUNC(created_at, MONTH)           AS month,

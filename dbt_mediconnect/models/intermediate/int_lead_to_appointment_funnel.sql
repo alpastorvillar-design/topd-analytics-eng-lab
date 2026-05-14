@@ -1,6 +1,6 @@
 -- INTERMEDIATE: int_lead_to_appointment_funnel
 --
--- Funnel completo: lead → cita → pago. Una fila por lead.
+-- Funnel completo: lead -> cita -> pago. Una fila por lead.
 -- Permite analizar tasas de conversión en cada paso del embudo.
 --
 -- DATE_DIFF(fecha1, fecha2, DAY): días entre dos fechas.

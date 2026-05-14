@@ -1,19 +1,19 @@
-# Tableau — Connection & Setup Guide
+# Tableau - Connection & Setup Guide
 
 ## Data Sources
 
 This project connects Tableau to the marts layer in BigQuery.
 
-### Option A — Direct BigQuery Connection (recommended)
+### Option A - Direct BigQuery Connection (recommended)
 Requires Tableau Desktop 2021.4+ or Tableau Cloud.
 
-1. Connect → Google BigQuery
+1. Connect -> Google BigQuery
 2. Sign in with the Google account that has access to `topd-lab`
 3. Project: `topd-lab`
 4. Dataset: `dbt_marts`
 5. Select the tables you need per workbook (see workbook map below)
 
-### Option B — CSV Extract (no BigQuery license needed)
+### Option B - CSV Extract (no BigQuery license needed)
 Run the export script first:
 ```bash
 python scripts/export_dashboard_extracts.py
@@ -59,8 +59,8 @@ Recommendation: use **Extract** for the retention cohort (large join), **Live** 
 ## Filters to Add on Every Dashboard
 
 - Date range (using `appointment_date`)
-- Country (using `country_id` → `dim_countries.country_name`)
-- Specialty (using `specialty_id` → `dim_specialties.specialty_name`)
+- Country (using `country_id` -> `dim_countries.country_name`)
+- Specialty (using `specialty_id` -> `dim_specialties.specialty_name`)
 
 Set these as Global Filters so they cascade across all sheets in the workbook.
 
@@ -68,7 +68,7 @@ Set these as Global Filters so they cascade across all sheets in the workbook.
 
 ## Publishing to Tableau Public
 
-1. File → Save to Tableau Public As...
+1. File -> Save to Tableau Public As...
 2. Sign in to your Tableau Public account
 3. The workbook uploads with embedded data (extract, not live)
 4. Set visibility to Public

@@ -1,12 +1,6 @@
-﻿-- =============================================================================
--- 01_joins.sql  ·  JOINs aplicados al modelo de datos MediConnect
--- =============================================================================
--- INNER JOIN  → sólo filas con coincidencia en ambas tablas
--- LEFT JOIN   → todas las filas de la izquierda, NULL si no hay match
--- FULL OUTER  → todas las filas de ambas tablas (útil para detectar gaps)
--- SELF JOIN   → tabla unida consigo misma para comparar filas del mismo grupo
--- Anti-join   → LEFT JOIN + WHERE right.key IS NULL (más robusto que NOT IN)
--- =============================================================================
+-- 01_joins.sql: JOINs aplicados al modelo de datos MediConnect
+-- INNER, LEFT, FULL OUTER, SELF y anti-join (LEFT + WHERE IS NULL).
+
 
 -- 1. INNER JOIN: citas con nombre de paciente y médico
 SELECT

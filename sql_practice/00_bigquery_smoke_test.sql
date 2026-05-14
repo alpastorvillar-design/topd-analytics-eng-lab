@@ -1,9 +1,6 @@
--- =============================================================================
--- 00_bigquery_smoke_test.sql  ·  Connectivity & schema validation
--- =============================================================================
--- Run these queries in the BigQuery console to confirm the pipeline is healthy
--- after a fresh dbt run. Each block should return data without errors.
--- =============================================================================
+-- 00_bigquery_smoke_test.sql: connectivity & schema validation
+-- Run these in the BigQuery console after a fresh dbt run.
+-- Each block should return data without errors.
 
 
 -- 1. Row counts per mart table
@@ -39,7 +36,7 @@ SELECT
 FROM `topd-lab.dbt_marts.fct_appointments`;
 
 
--- 3. Revenue sanity check — total and average per appointment
+-- 3. Revenue sanity check: total and average per appointment
 SELECT
     ROUND(SUM(amount_eur), 2)               AS total_revenue_eur,
     ROUND(AVG(amount_eur), 2)               AS avg_per_payment,
@@ -56,7 +53,7 @@ LEFT JOIN `topd-lab.dbt_marts.dim_patients` AS p USING (patient_id)
 WHERE p.patient_id IS NULL;
 
 
--- 5. Partition metadata — confirm partitioning is active
+-- 5. Partition metadata: confirm partitioning is active
 SELECT
     table_name,
     partition_id,
@@ -68,7 +65,7 @@ ORDER BY partition_id DESC
 LIMIT 12;
 
 
--- 6. Latest daily KPI — quick sanity on the executive agg
+-- 6. Latest daily KPI: quick sanity on the executive agg
 SELECT *
 FROM `topd-lab.dbt_marts.agg_daily_business_kpis`
 ORDER BY date DESC

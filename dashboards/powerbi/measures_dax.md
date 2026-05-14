@@ -1,4 +1,4 @@
-﻿# Power BI DAX Measures — MediConnect
+# Power BI DAX Measures - MediConnect
 
 ## ¿Por qué DAX?
 
@@ -6,8 +6,8 @@ DAX (Data Analysis Expressions) es el lenguaje de fórmulas de Power BI.
 Las medidas DAX calculan valores en tiempo de consulta, al contrario que
 las columnas calculadas que se calculan al refrescar los datos.
 
-**Regla práctica**: transformaciones y agregaciones → en dbt/SQL.
-Lógica de presentación, comparativas temporales, filtros dinámicos → en DAX.
+**Regla práctica**: transformaciones y agregaciones -> en dbt/SQL.
+Lógica de presentación, comparativas temporales, filtros dinámicos -> en DAX.
 
 ---
 
@@ -138,7 +138,7 @@ IF(
 KPI Arrow Revenue =
 IF(
     ISBLANK([Revenue MoM %]),
-    "—",
+    "-",
     IF([Revenue MoM %] >= 0, "▲", "▼")
 )
 ```
@@ -153,7 +153,7 @@ IF(
   según los filtros del slicer, medidas derivadas de otras medidas.
 
 **Filter context**: el conjunto de filtros activos cuando se evalúa una medida.
-`CALCULATE` lo modifica — es el concepto central de DAX.
+`CALCULATE` lo modifica - es el concepto central de DAX.
 
 **DIVIDE vs /**: `DIVIDE(a, b)` devuelve BLANK si b = 0 (igual que `SAFE_DIVIDE`
 en BigQuery). El operador `/` lanza un error. Siempre usar `DIVIDE` en ratios.

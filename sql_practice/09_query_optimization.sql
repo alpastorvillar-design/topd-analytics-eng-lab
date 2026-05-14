@@ -1,78 +1,67 @@
--- =============================================================================
--- 09_query_optimization.sql  ·  Performance & cost patterns in BigQuery
--- =============================================================================
--- Partition pruning, clustering, avoiding full scans, materialisation strategy,
--- slot usage, approximate vs exact aggregations, and query anti-patterns.
--- =============================================================================
+-- 09_query_optimization.sql: performance y coste en BigQuery
+-- Partition pruning, clustering, evitar full scans, estrategia de
+-- materialización, uso de slots, approximate vs exact y anti-patrones.
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 1. Partition pruning: always filter on the partition column
---    fct_appointments is partitioned by appointment_date (MONTH granularity).
---    Without the filter, BQ scans the entire table.
--- ─────────────────────────────────────────────────────────────────────────────
+-- 1. Partition pruning: filtrar siempre por la columna de partición.
+--    fct_appointments está particionada por appointment_date (MONTH).
+--    Sin filtro, BQ escanea toda la tabla.
 
--- BAD: full table scan, processes all partitions
+-- MAL: full table scan, procesa todas las particiones
 SELECT COUNT(*) FROM `topd-lab.dbt_marts.fct_appointments`
 WHERE status = 'completed';
 
--- GOOD: partition filter added — only the relevant months are scanned
+-- BIEN: filtro de partición añadido, solo se escanean los meses relevantes
 SELECT COUNT(*) FROM `topd-lab.dbt_marts.fct_appointments`
 WHERE appointment_date >= '2024-01-01'
   AND status = 'completed';
 
--- GOOD: dynamic — always last 90 days, no hardcoded dates
+-- BIEN: dinámico, últimos 90 días sin hardcodear fechas
 SELECT COUNT(*) FROM `topd-lab.dbt_marts.fct_appointments`
 WHERE appointment_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY)
   AND status = 'completed';
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 2. Clustering benefit: filter on cluster columns after partition pruning
---    fct_appointments clusters on [country_id, specialty_id, status].
---    BQ skips blocks that don't match — no cost reduction, but faster execution.
--- ─────────────────────────────────────────────────────────────────────────────
+-- 2. Clustering: filtrar por columnas de cluster tras partition pruning.
+--    fct_appointments clusters por [country_id, specialty_id, status].
+--    BQ salta bloques que no coinciden. Sin reducir coste, acelera la ejecución.
 SELECT
     specialty_id,
     COUNT(*)                AS appointments,
     SUM(amount_eur)         AS revenue
 FROM `topd-lab.dbt_marts.fct_appointments` AS a
 LEFT JOIN `topd-lab.dbt_marts.fct_payments` AS p USING (appointment_id)
-WHERE appointment_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY)  -- partition
-  AND country_id   = 'ES'                                              -- cluster col 1
-  AND status       = 'completed'                                       -- cluster col 3
+WHERE appointment_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY)
+  AND country_id   = 'ES'
+  AND status       = 'completed'
 GROUP BY specialty_id;
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 3. SELECT only the columns you need — avoid SELECT *
---    BigQuery bills by bytes scanned. Selecting 3 columns from a 50-column
---    table can reduce cost by 94%.
--- ─────────────────────────────────────────────────────────────────────────────
+-- 3. SELECT solo las columnas necesarias, evitar SELECT *.
+--    BigQuery factura por bytes escaneados. Seleccionar 3 columnas de una
+--    tabla de 50 puede reducir el coste un 94%.
 
--- BAD: reads all columns including large ones like cancellation_reason, source_lead_id
+-- MAL: lee todas las columnas, incluidas las grandes
 SELECT *
 FROM `topd-lab.dbt_marts.fct_appointments`
 WHERE appointment_date >= '2024-01-01';
 
--- GOOD: only the 4 columns you actually use
+-- BIEN: solo las 4 columnas que se usan
 SELECT appointment_id, patient_id, status, appointment_date
 FROM `topd-lab.dbt_marts.fct_appointments`
 WHERE appointment_date >= '2024-01-01';
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 4. Filter before joining — push predicates into CTEs
--- ─────────────────────────────────────────────────────────────────────────────
+-- 4. Filtrar antes de unir: empujar predicados dentro de CTEs.
 
--- BAD: joins full tables, then filters
+-- MAL: une tablas completas y luego filtra
 SELECT a.appointment_id, p.amount_eur
 FROM `topd-lab.dbt_marts.fct_appointments` AS a
 JOIN `topd-lab.dbt_marts.fct_payments`     AS p USING (appointment_id)
 WHERE a.appointment_date >= '2024-01-01'
   AND p.payment_status = 'paid';
 
--- GOOD: filter each table first, then join the smaller result sets
+-- BIEN: filtrar cada tabla antes del join
 WITH recent_appointments AS (
     SELECT appointment_id, patient_id, doctor_id, appointment_date
     FROM `topd-lab.dbt_marts.fct_appointments`
@@ -88,42 +77,36 @@ FROM recent_appointments AS a
 JOIN paid_payments        AS p USING (appointment_id);
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 5. Avoid DISTINCT when GROUP BY is sufficient
--- ─────────────────────────────────────────────────────────────────────────────
+-- 5. Evitar DISTINCT cuando GROUP BY basta.
 
--- BAD: DISTINCT over a large result set forces a full sort
+-- MAL: DISTINCT sobre un set grande fuerza un sort completo
 SELECT DISTINCT patient_id, DATE_TRUNC(appointment_date, MONTH) AS month
 FROM `topd-lab.dbt_marts.fct_appointments`
 WHERE status = 'completed';
 
--- GOOD: GROUP BY is equivalent and the planner optimises it better
+-- BIEN: GROUP BY es equivalente y el planner lo optimiza mejor
 SELECT patient_id, DATE_TRUNC(appointment_date, MONTH) AS month
 FROM `topd-lab.dbt_marts.fct_appointments`
 WHERE status = 'completed'
 GROUP BY patient_id, month;
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 6. Use APPROX_COUNT_DISTINCT for cardinality estimates on large tables
---    ~2% error, significantly faster and cheaper than COUNT(DISTINCT ...).
--- ─────────────────────────────────────────────────────────────────────────────
+-- 6. Usar APPROX_COUNT_DISTINCT para cardinality en tablas grandes.
+--    ~2% error, mucho más rápido y barato que COUNT(DISTINCT ...).
 SELECT
     DATE_TRUNC(appointment_date, MONTH)     AS month,
-    -- Exact: expensive on 50M+ rows
+    -- Exact: caro en tablas de 50M+ filas
     COUNT(DISTINCT patient_id)              AS exact_unique_patients,
-    -- Approximate: use for dashboards where 2% error is acceptable
+    -- Approximate: válido en dashboards donde 2% de error es aceptable
     APPROX_COUNT_DISTINCT(patient_id)       AS approx_unique_patients
 FROM `topd-lab.dbt_marts.fct_appointments`
 GROUP BY month
 ORDER BY month;
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 7. Avoid correlated subqueries — rewrite as JOIN or window function
--- ─────────────────────────────────────────────────────────────────────────────
+-- 7. Evitar subqueries correlacionadas: reescribir como JOIN o window function.
 
--- BAD: correlated subquery runs once per row (O(n²) in the worst case)
+-- MAL: subquery correlacionada se ejecuta una vez por fila
 SELECT
     doctor_id,
     (SELECT COUNT(*) FROM `topd-lab.dbt_marts.fct_appointments` a2
@@ -131,7 +114,7 @@ SELECT
 FROM `topd-lab.dbt_marts.fct_appointments` AS a1
 GROUP BY doctor_id;
 
--- GOOD: pre-aggregate, then join
+-- BIEN: pre-agregar y luego unir
 WITH doctor_completed AS (
     SELECT doctor_id, COUNTIF(status = 'completed') AS completed
     FROM `topd-lab.dbt_marts.fct_appointments`
@@ -140,44 +123,39 @@ WITH doctor_completed AS (
 SELECT * FROM doctor_completed ORDER BY completed DESC;
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 8. Materialisation strategy: when to use TABLE vs VIEW in dbt
--- ─────────────────────────────────────────────────────────────────────────────
--- These are not executable queries — they illustrate the decision logic.
+-- 8. Estrategia de materialización: TABLE vs VIEW vs INCREMENTAL en dbt.
+--    Estos comentarios ilustran la decisión, no son ejecutables.
 
 -- VIEW (staging, intermediate):
---   + No storage cost
---   + Always reflects latest data
---   - Query runs the full transformation every time
---   - Expensive if referenced by multiple downstream models
+--   + Sin coste de storage
+--   + Refleja siempre los datos más recientes
+--   - Ejecuta la transformación entera en cada query
+--   - Costoso si lo referencian varios modelos downstream
 
 -- TABLE (marts):
---   + Computed once, read many times
---   + Partition pruning applies at query time
---   - Storage cost (cheap in BQ for typical mart sizes)
---   - Needs scheduled refresh to stay current
+--   + Calculada una vez, leída muchas
+--   + Partition pruning aplica al consultar
+--   - Coste de storage (barato en BQ para marts típicos)
+--   - Requiere refresh programado para mantenerse actualizada
 
--- INCREMENTAL (high-volume facts):
---   + Only processes new/changed rows per run
---   + Dramatically reduces dbt run time and BQ compute cost
---   - Requires a reliable updated_at column
---   - More complex to backfill
+-- INCREMENTAL (facts de alto volumen):
+--   + Solo procesa filas nuevas / cambiadas por run
+--   + Reduce tiempo de dbt run y compute de BQ
+--   - Requiere columna updated_at fiable
+--   - Backfill más complejo
 
--- fct_appointments with incremental materialisation would look like:
+-- fct_appointments con materialization incremental sería:
 -- {{ config(materialized='incremental', unique_key='appointment_id',
 --           incremental_strategy='merge') }}
 -- ... WHERE updated_at > (SELECT MAX(updated_at) FROM {{ this }})
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 9. Bytes processed estimation — check before running expensive queries
--- ─────────────────────────────────────────────────────────────────────────────
--- In BigQuery console: paste query, click the green checkmark (not Run).
--- The validator shows estimated bytes processed in the top right.
--- BQ charges $5 per TB scanned (on-demand pricing).
--- A query scanning 10 GB costs ~$0.05. Scanning 10 TB costs ~$50.
+-- 9. Estimación de bytes procesados: comprobar antes de ejecutar queries caras.
+--    En la consola de BigQuery: pegar query, mirar el validador en la esquina
+--    superior derecha (estima bytes a procesar).
+--    BQ cobra $5 por TB escaneado (on-demand). 10 GB ~ $0.05, 10 TB ~ $50.
 
--- To check table size:
+-- Tamaño de las tablas:
 SELECT
     table_name,
     ROUND(size_bytes / POW(1024, 3), 3)     AS size_gb,
@@ -186,12 +164,10 @@ FROM `topd-lab.dbt_marts.__TABLES__`
 ORDER BY size_bytes DESC;
 
 
--- ─────────────────────────────────────────────────────────────────────────────
--- 10. Window function vs subquery: performance comparison
---     Window functions run in a single pass; subqueries may rescan the table.
--- ─────────────────────────────────────────────────────────────────────────────
+-- 10. Window function vs subquery: comparación de performance.
+--     Las window functions corren en un solo pass; las subqueries pueden rescanar.
 
--- BAD: subquery rescans fct_appointments to get the max date per patient
+-- MAL: subquery rescanea fct_appointments para obtener el max_date por paciente
 SELECT
     a.patient_id,
     a.appointment_id,
@@ -204,7 +180,7 @@ WHERE a.appointment_date = (
 )
   AND a.status = 'completed';
 
--- GOOD: window function — single scan, QUALIFY eliminates the subquery
+-- BIEN: window function en un solo scan, QUALIFY elimina la subquery
 SELECT patient_id, appointment_id, appointment_date
 FROM `topd-lab.dbt_marts.fct_appointments`
 WHERE status = 'completed'

@@ -1,9 +1,7 @@
-﻿-- =============================================================================
--- 03_window_functions.sql  ·  Window Functions
--- =============================================================================
+-- 03_window_functions.sql: Window Functions
 -- ROW_NUMBER / RANK / DENSE_RANK, LAG/LEAD, SUM OVER frames, FIRST/LAST_VALUE,
 -- NTILE, QUALIFY. Sin colapsar filas, a diferencia de GROUP BY.
--- =============================================================================
+
 
 -- 1. ROW_NUMBER: numerar visitas de cada paciente por fecha
 SELECT
@@ -21,9 +19,10 @@ ORDER BY patient_id, visit_number;
 
 
 -- 2. RANK vs DENSE_RANK vs ROW_NUMBER
--- Con empates:  ROW_NUMBER → 1,2,3,4 (siempre único)
---               RANK       → 1,2,2,4 (salta número)
---               DENSE_RANK → 1,2,2,3 (sin salto)
+-- Con empates:
+--   ROW_NUMBER -> 1,2,3,4 (siempre único)
+--   RANK       -> 1,2,2,4 (salta número)
+--   DENSE_RANK -> 1,2,2,3 (sin salto)
 SELECT
     specialty_id,
     month,

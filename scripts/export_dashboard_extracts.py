@@ -68,11 +68,11 @@ def export_table(table_name: str, filter_clause: str, description: str) -> None:
 
     out_path = OUTPUT_DIR / f"{table_name}.csv"
     df.to_csv(out_path, index=False)
-    print(f"  ✓ {len(df):,} filas → {out_path}")
+    print(f"   {len(df):,} filas -> {out_path}")
 
 
 def main() -> None:
-    print(f"Exportando desde {PROJECT_ID}.{DATASET_ID} → {OUTPUT_DIR}/\n")
+    print(f"Exportando desde {PROJECT_ID}.{DATASET_ID} -> {OUTPUT_DIR}/\n")
 
     for export in EXPORTS:
         export_table(
@@ -81,7 +81,7 @@ def main() -> None:
             description=export["description"],
         )
 
-    print(f"\n✓ Exportación completada. Archivos en {OUTPUT_DIR}/")
+    print(f"\n Exportación completada. Archivos en {OUTPUT_DIR}/")
 
 
 if __name__ == "__main__":

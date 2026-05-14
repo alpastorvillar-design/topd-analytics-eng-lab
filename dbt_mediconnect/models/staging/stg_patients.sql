@@ -1,6 +1,6 @@
-﻿-- STAGING: stg_patients
+-- STAGING: stg_patients
 -- Limpieza de tipos sobre raw_mediconnect.patients.
--- Sin joins ni lógica de negocio — eso va en intermediate.
+-- Sin joins ni lógica de negocio - eso va en intermediate.
 -- VIEW: no duplica almacenamiento, siempre refleja el raw actualizado.
 
 with source as (

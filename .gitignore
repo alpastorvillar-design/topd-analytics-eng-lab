@@ -1,4 +1,4 @@
-# === CREDENCIALES — NUNCA AL REPO ===
+# === CREDENCIALES - NUNCA AL REPO ===
 .env
 *.json
 *service-account*.json
@@ -40,7 +40,8 @@ dbt_mediconnect/target/
 dbt_mediconnect/logs/
 dbt_mediconnect/.user.yml
 
-# === PRIVADO — No al repo público ===
+# === PRIVADO - No al repo público ===
 notes/
-CLAUDE.md
 docs/
+*.local.md
+.project_notes/

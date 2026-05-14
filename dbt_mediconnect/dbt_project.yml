@@ -9,11 +9,20 @@ analysis-paths: ["analyses"]
 test-paths: ["tests"]
 seed-paths: ["seeds"]
 macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
 target-path: "target"
 clean-targets: ["target", "dbt_packages"]
 
+snapshots:
+  mediconnect:
+    +target_schema: dbt_snapshots
+
 vars:
-  is_dev: true
+  # Dev filter: cuando is_dev=true, los facts se limitan a los últimos
+  # `dev_window_days` días contando desde MAX(fecha) del dataset (no de today).
+  # Esto mantiene cobertura aunque los datos sintéticos sean antiguos.
+  is_dev: false
+  dev_window_days: 90
   project_id: "topd-lab"
   bq_location: "EU"
 

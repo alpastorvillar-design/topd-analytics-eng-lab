@@ -2,7 +2,7 @@
 --
 -- ¿Qué es un test singular en dbt?
 -- Un archivo SQL que devuelve las filas que FALLAN el test.
--- Si la query devuelve 0 filas → test pasa. Si devuelve filas → test falla.
+-- Si la query devuelve 0 filas -> test pasa. Si devuelve filas -> test falla.
 --
 -- Regla de negocio: toda cita con status='completed' debe tener un pago
 -- con payment_status IN ('paid', 'refunded').
