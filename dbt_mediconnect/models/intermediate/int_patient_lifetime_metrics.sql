@@ -65,7 +65,7 @@ final as (
         p.country_id,
         -- Mes de registro -> cohorte para retention analysis
         date_trunc(date(p.created_at), month)              as cohort_month,
-        m.* EXCEPT (patient_id)
+        m.* except (patient_id)
 
     from patients p
     left join patient_metrics m using (patient_id)
