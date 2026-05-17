@@ -1,5 +1,5 @@
 -- MART EXECUTIVE: agg_monthly_country_kpis
--- KPIs mensuales por país. Para comparación geográfica en dashboards.
+-- KPIs mensuales por paÃ­s. Para comparaciÃ³n geogrÃ¡fica en dashboards.
 
 with appointments as (
     select
@@ -52,7 +52,7 @@ final as (
             a.unique_patients
         )                                       as revenue_per_patient,
 
-        -- Ranking de países por revenue ese mes
+        -- Ranking de paÃ­ses por revenue ese mes
         rank() over (
             partition by a.month
             order by coalesce(r.total_revenue_eur, 0) desc

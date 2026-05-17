@@ -27,21 +27,24 @@ models:
 
   - name: mart_doctor_supply_demand
     description: >
-      Supply vs demand metrics per doctor per month. Highlights under-supplied
-      specialties and over-booked doctors for marketplace management.
+      Supply vs demand metrics per specialty, country and month. Highlights
+      under-supplied specialties for marketplace management.
     columns:
+      - name: specialty_id
+        tests:
+          - not_null
+      - name: country_id
+        tests:
+          - not_null
       - name: month
         tests:
           - not_null
-      - name: doctor_id
-        tests:
-          - not_null
-      - name: total_slots_available
-        description: Approximate supply (based on working days assumption)
-      - name: total_appointments_booked
-        description: Actual demand
-      - name: occupancy_rate
-        description: booked / available slots
+      - name: total_appointments
+        description: Total appointments booked in the period
+      - name: active_doctors_with_appointments
+        description: Distinct doctors who had at least one appointment
+      - name: appointments_per_doctor
+        description: Demand/supply ratio - above 1 means more appointments than active doctors
 
   - name: mart_appointment_quality
     description: >

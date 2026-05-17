@@ -1,4 +1,4 @@
-﻿-- STAGING: stg_leads
+-- STAGING: stg_leads
 --
 -- Un lead es un usuario interesado que aún no ha reservado cita.
 -- patient_id y doctor_id pueden ser NULL (lead anónimo o sin médico concreto).

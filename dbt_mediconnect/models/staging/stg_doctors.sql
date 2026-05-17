@@ -1,4 +1,4 @@
-﻿-- STAGING: stg_doctors
+-- STAGING: stg_doctors
 -- Limpieza y tipado de la tabla cruda de médicos.
 -- rating se redondea a 2 decimales para consistencia.
 

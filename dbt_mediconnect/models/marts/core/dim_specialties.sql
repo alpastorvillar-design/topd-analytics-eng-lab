@@ -1,5 +1,5 @@
 -- MART CORE: dim_specialties
--- Dimensión de especialidades médicas. Tabla pequeña y estable.
+-- DimensiÃ³n de especialidades mÃ©dicas. Tabla pequeÃ±a y estable.
 
 with specialties as (
     select * from {{ ref('stg_specialties') }}

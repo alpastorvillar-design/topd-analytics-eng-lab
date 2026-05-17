@@ -1,7 +1,7 @@
 -- INTERMEDIATE: int_appointments_enriched
 -- Join entre appointments, doctors, patients y payments.
--- Añade métricas de secuencia por paciente vía window functions:
--- ROW_NUMBER para número de visita, LAG para días entre citas.
+-- AÃ±ade mÃ©tricas de secuencia por paciente vÃ­a window functions:
+-- ROW_NUMBER para nÃºmero de visita, LAG para dÃ­as entre citas.
 
 with appointments as (
     select * from {{ ref('stg_appointments') }}
@@ -36,7 +36,7 @@ enriched as (
         a.is_first_appointment,
         a.source_lead_id,
 
-        -- Contexto del médico
+        -- Contexto del mÃ©dico
         d.specialty_id,
         d.country_id,
         d.rating as doctor_rating,
@@ -54,18 +54,18 @@ enriched as (
 
         -- Flags calculados
         case
-            when a.status = 'completed' and pay.payment_id is null then true
+            when a.status = 'completed' and pay.appointment_id is null then true
             else false
         end                                         as is_missing_payment,
 
-        -- Window: número de cita del paciente en orden cronológico
+        -- Window: nÃºmero de cita del paciente en orden cronolÃ³gico
         -- QUALIFY es BigQuery-specific: filtra sobre window functions sin subquery
         row_number() over (
             partition by a.patient_id
             order by a.appointment_start_at asc
         )                                           as patient_appointment_sequence,
 
-        -- Window: días desde la cita anterior del mismo paciente
+        -- Window: dÃ­as desde la cita anterior del mismo paciente
         date_diff(
             date(a.appointment_start_at),
             date(lag(a.appointment_start_at) over (

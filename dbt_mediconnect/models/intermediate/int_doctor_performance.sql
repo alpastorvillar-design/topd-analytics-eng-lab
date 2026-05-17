@@ -1,5 +1,5 @@
 -- INTERMEDIATE: int_doctor_performance
--- Métricas agregadas por médico: volumen, tasas de completado/cancelación,
+-- MÃ©tricas agregadas por mÃ©dico: volumen, tasas de completado/cancelaciÃ³n,
 -- revenue y ranking dentro de especialidad (RANK para respetar empates).
 
 with appointments as (

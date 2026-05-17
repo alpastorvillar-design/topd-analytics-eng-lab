@@ -30,17 +30,17 @@ models:
   mediconnect:
     staging:
       +materialized: view
-      +dataset: dbt_staging
+      +schema: dbt_staging
     intermediate:
       +materialized: view
-      +dataset: dbt_intermediate
+      +schema: dbt_intermediate
     marts:
       core:
         +materialized: table
-        +dataset: dbt_marts
+        +schema: dbt_marts
       product:
         +materialized: table
-        +dataset: dbt_marts
+        +schema: dbt_marts
       executive:
         +materialized: table
-        +dataset: dbt_marts
+        +schema: dbt_marts

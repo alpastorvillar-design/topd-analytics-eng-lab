@@ -1,5 +1,5 @@
 -- MART CORE: dim_countries
--- Dimensión de países. Tabla pequeña y estable.
+-- DimensiÃ³n de paÃ­ses. Tabla pequeÃ±a y estable.
 
 with countries as (
     select * from {{ ref('stg_countries') }}

@@ -1,4 +1,4 @@
-﻿-- STAGING: stg_payments
+-- STAGING: stg_payments
 --
 -- amount_cents: los pagos se almacenan en céntimos (entero) para evitar
 -- problemas de precisión de floating point. 1500 = 15.00 EUR.

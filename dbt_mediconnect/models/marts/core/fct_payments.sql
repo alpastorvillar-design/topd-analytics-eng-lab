@@ -18,13 +18,12 @@ with payments as (
     select * from {{ ref('stg_payments') }}
 ),
 
-appointments as (
+doctors as (
     select
-        appointment_id,
+        doctor_id,
         specialty_id,
-        country_id,
-        channel
-    from {{ ref('stg_appointments') }}
+        country_id
+    from {{ ref('stg_doctors') }}
 ),
 
 final as (
@@ -33,8 +32,8 @@ final as (
         p.appointment_id,
         p.patient_id,
         p.doctor_id,
-        a.specialty_id,
-        a.country_id,
+        d.specialty_id,
+        d.country_id,
         date(p.payment_created_at)              as payment_date,
         p.payment_created_at,
         p.updated_at,
@@ -45,7 +44,7 @@ final as (
         p.payment_method
 
     from payments p
-    left join appointments a using (appointment_id)
+    left join doctors d using (doctor_id)
 )
 
 select * from final

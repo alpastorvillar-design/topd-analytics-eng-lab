@@ -134,6 +134,22 @@ def load_table(table_name: str) -> None:
         return
 
     df = pd.read_csv(csv_path)
+
+    # Convertir columnas al tipo correcto segun el schema antes de subir a BQ
+    for field in SCHEMAS[table_name]:
+        if field.name not in df.columns:
+            continue
+        if field.field_type == "TIMESTAMP":
+            df[field.name] = pd.to_datetime(df[field.name], utc=True)
+        elif field.field_type == "DATE":
+            df[field.name] = pd.to_datetime(df[field.name]).dt.date
+        elif field.field_type == "BOOL":
+            df[field.name] = df[field.name].astype(bool)
+        elif field.field_type == "INT64":
+            df[field.name] = pd.to_numeric(df[field.name], errors="coerce").astype("Int64")
+        elif field.field_type == "FLOAT64":
+            df[field.name] = pd.to_numeric(df[field.name], errors="coerce")
+
     print(f"  Cargando {table_name}: {len(df):,} filas...")
 
     table_ref = f"{PROJECT_ID}.{DATASET_ID}.{table_name}"
@@ -145,11 +161,6 @@ def load_table(table_name: str) -> None:
         # WRITE_TRUNCATE: borra y recrea la tabla en cada carga.
         # Ideal para datos sintéticos que se regeneran completos.
         # En producción, usarías WRITE_APPEND o merge jobs.
-        source_format=bigquery.SourceFormat.CSV,
-        skip_leading_rows=1,
-        null_marker="",
-        # null_marker="": las celdas vacías en CSV -> NULL en BigQuery.
-        # Sin esto, los campos NULLABLE quedarían como string vacío "".
     )
 
     load_job = client.load_table_from_dataframe(

@@ -1,12 +1,12 @@
 -- MART PRODUCT: mart_patient_retention
 --
--- Análisis de retención por cohorte mensual.
+-- AnÃ¡lisis de retenciÃ³n por cohorte mensual.
 -- Una fila por (cohort_month, months_since_acquisition).
 --
--- ¿Qué es cohort analysis?
+-- Â¿QuÃ© es cohort analysis?
 -- Agrupa usuarios por su mes de registro (cohorte) y mide
--- qué % siguen activos en los meses siguientes.
--- Es la métrica más importante para entender retención de producto.
+-- quÃ© % siguen activos en los meses siguientes.
+-- Es la mÃ©trica mÃ¡s importante para entender retenciÃ³n de producto.
 --
 -- Ejemplo de resultado:
 -- cohort_month | month_number | cohort_size | retained_patients | retention_rate
@@ -41,7 +41,7 @@ patient_activity as (
     inner join appointments a using (patient_id)
 ),
 
--- Tamaño de cada cohorte
+-- TamaÃ±o de cada cohorte
 cohort_sizes as (
     select
         cohort_month,

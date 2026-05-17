@@ -1,4 +1,4 @@
-﻿-- STAGING: stg_countries
+-- STAGING: stg_countries
 -- Catálogo de países. Tabla pequeña y estática.
 
 with source as (

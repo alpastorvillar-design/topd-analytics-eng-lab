@@ -1,4 +1,4 @@
-﻿-- STAGING: stg_specialties
+-- STAGING: stg_specialties
 -- Tabla de referencia pequeña. Sin lógica especial, solo limpieza de tipos.
 
 with source as (

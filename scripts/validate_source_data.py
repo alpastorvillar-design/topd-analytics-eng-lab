@@ -219,29 +219,29 @@ def make_checks(ds: str) -> list[Check]:
         ),
         Check(
             name="row_count_doctors",
-            description="Debe haber 300 médicos",
+            description="Debe haber 500 médicos",
             sql=f"""
                 SELECT COUNT(*) AS n
                 FROM `{ds}.doctors`
-                HAVING COUNT(*) != 300
+                HAVING COUNT(*) != 500
             """,
         ),
         Check(
             name="row_count_patients",
-            description="Debe haber 2000 pacientes",
+            description="Debe haber 15000 pacientes",
             sql=f"""
                 SELECT COUNT(*) AS n
                 FROM `{ds}.patients`
-                HAVING COUNT(*) != 2000
+                HAVING COUNT(*) != 15000
             """,
         ),
         Check(
             name="row_count_appointments",
-            description="Debe haber 8000 citas",
+            description="Debe haber 60000 citas",
             sql=f"""
                 SELECT COUNT(*) AS n
                 FROM `{ds}.appointments`
-                HAVING COUNT(*) != 8000
+                HAVING COUNT(*) != 60000
             """,
         ),
     ]

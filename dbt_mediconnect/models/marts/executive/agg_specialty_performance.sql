@@ -1,5 +1,5 @@
 -- MART EXECUTIVE: agg_specialty_performance
--- Rendimiento por especialidad médica. Para identificar top/bottom performers.
+-- Rendimiento por especialidad mÃ©dica. Para identificar top/bottom performers.
 
 with appointments as (
     select

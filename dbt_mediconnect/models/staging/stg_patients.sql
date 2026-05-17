@@ -1,6 +1,6 @@
 -- STAGING: stg_patients
 -- Limpieza de tipos sobre raw_mediconnect.patients.
--- Sin joins ni lógica de negocio - eso va en intermediate.
+-- Sin joins ni lÃ³gica de negocio - eso va en intermediate.
 -- VIEW: no duplica almacenamiento, siempre refleja el raw actualizado.
 
 with source as (
@@ -12,7 +12,7 @@ renamed as (
         patient_id,
         full_name,
         gender,
-        -- CAST asegura el tipo correcto independientemente de cómo llegó el CSV
+        -- CAST asegura el tipo correcto independientemente de cÃ³mo llegÃ³ el CSV
         cast(birth_date as date)        as birth_date,
         country_id,
         city,

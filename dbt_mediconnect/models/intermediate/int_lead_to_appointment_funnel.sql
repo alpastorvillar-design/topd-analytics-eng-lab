@@ -1,11 +1,11 @@
 -- INTERMEDIATE: int_lead_to_appointment_funnel
 --
 -- Funnel completo: lead -> cita -> pago. Una fila por lead.
--- Permite analizar tasas de conversión en cada paso del embudo.
+-- Permite analizar tasas de conversiÃ³n en cada paso del embudo.
 --
--- DATE_DIFF(fecha1, fecha2, DAY): días entre dos fechas.
--- Usamos para medir velocidad de conversión: ¿cuánto tarda un lead
--- en convertirse en cita? ¿y en pago?
+-- DATE_DIFF(fecha1, fecha2, DAY): dÃ­as entre dos fechas.
+-- Usamos para medir velocidad de conversiÃ³n: Â¿cuÃ¡nto tarda un lead
+-- en convertirse en cita? Â¿y en pago?
 
 with leads as (
     select * from {{ ref('stg_leads') }}
@@ -39,24 +39,24 @@ funnel as (
         l.lead_status,
         l.created_at                                        as lead_created_at,
 
-        -- Paso 1: ¿Convirtió en cita?
+        -- Paso 1: Â¿ConvirtiÃ³ en cita?
         a.appointment_id,
         a.appointment_created_at,
         a.status                                            as appointment_status,
 
-        -- Paso 2: ¿Hubo pago?
+        -- Paso 2: Â¿Hubo pago?
         p.payment_created_at,
         p.amount_cents,
         p.payment_status,
 
-        -- Flags de conversión
+        -- Flags de conversiÃ³n
         case when a.appointment_id is not null
             then true else false end                        as is_converted_to_appointment,
 
         case when p.appointment_id is not null
             then true else false end                        as is_converted_to_payment,
 
-        -- Velocidad de conversión en días
+        -- Velocidad de conversiÃ³n en dÃ­as
         date_diff(
             date(a.appointment_created_at),
             date(l.created_at),
