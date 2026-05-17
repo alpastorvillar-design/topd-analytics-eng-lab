@@ -5,16 +5,16 @@ models:
     description: "Dimensión de pacientes con métricas de ciclo de vida y segmento."
     columns:
       - name: patient_id
-        tests: [unique, not_null]
+        data_tests: [unique, not_null]
       - name: country_id
-        tests:
+        data_tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_countries')
                 field: country_id
       - name: patient_segment
-        tests:
+        data_tests:
           - accepted_values:
               arguments:
                 values: ['new', 'active', 'loyal', 'champion', 'unknown']
@@ -23,23 +23,23 @@ models:
     description: "Dimensión de médicos con métricas de rendimiento y ranking."
     columns:
       - name: doctor_id
-        tests: [unique, not_null]
+        data_tests: [unique, not_null]
       - name: specialty_id
-        tests:
+        data_tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_specialties')
                 field: specialty_id
       - name: country_id
-        tests:
+        data_tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_countries')
                 field: country_id
       - name: is_active
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
@@ -50,90 +50,90 @@ models:
     description: "Catálogo de especialidades médicas."
     columns:
       - name: specialty_id
-        tests: [unique, not_null]
+        data_tests: [unique, not_null]
 
   - name: dim_countries
     description: "Catálogo de países."
     columns:
       - name: country_id
-        tests: [unique, not_null]
+        data_tests: [unique, not_null]
 
   - name: fct_appointments
     description: "Hechos de citas. Particionado por mes, clusterizado por país/especialidad/status. Materialización incremental con merge."
     columns:
       - name: appointment_id
-        tests: [unique, not_null]
+        data_tests: [unique, not_null]
       - name: patient_id
-        tests:
+        data_tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_patients')
                 field: patient_id
       - name: doctor_id
-        tests:
+        data_tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_doctors')
                 field: doctor_id
       - name: specialty_id
-        tests:
+        data_tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_specialties')
                 field: specialty_id
       - name: country_id
-        tests:
+        data_tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_countries')
                 field: country_id
       - name: status
-        tests:
+        data_tests:
           - accepted_values:
               arguments:
                 values: ['completed', 'cancelled', 'no_show', 'scheduled']
       - name: channel
-        tests:
+        data_tests:
           - accepted_values:
               arguments:
                 values: ['web', 'app', 'phone', 'clinic']
       - name: appointment_date
-        tests:
+        data_tests:
           - not_null
 
   - name: fct_payments
     description: "Hechos de pagos. Particionado por mes de pago."
     columns:
       - name: payment_id
-        tests: [unique, not_null]
+        data_tests: [unique, not_null]
       - name: appointment_id
-        tests:
+        data_tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('fct_appointments')
                 field: appointment_id
       - name: specialty_id
-        tests:
+        data_tests:
           - relationships:
               arguments:
                 to: ref('dim_specialties')
                 field: specialty_id
       - name: country_id
-        tests:
+        data_tests:
           - relationships:
               arguments:
                 to: ref('dim_countries')
                 field: country_id
       - name: amount_cents
-        tests:
+        data_tests:
           - not_null
       - name: payment_status
-        tests:
+        data_tests:
           - accepted_values:
               arguments:
                 values: ['paid', 'refunded', 'failed', 'pending']
@@ -142,23 +142,23 @@ models:
     description: "Hechos de leads con funnel completo lead -> cita -> pago."
     columns:
       - name: lead_id
-        tests: [unique, not_null]
+        data_tests: [unique, not_null]
       - name: specialty_id
-        tests:
+        data_tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_specialties')
                 field: specialty_id
       - name: country_id
-        tests:
+        data_tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_countries')
                 field: country_id
       - name: lead_status
-        tests:
+        data_tests:
           - accepted_values:
               arguments:
                 values: ['new', 'contacted', 'converted', 'lost']

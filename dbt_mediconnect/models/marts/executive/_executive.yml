@@ -9,17 +9,17 @@ models:
     columns:
       - name: date
         description: Calendar date
-        tests:
+        data_tests:
           - not_null
           - unique
       - name: total_appointments
-        tests:
+        data_tests:
           - not_null
       - name: completed_appointments
-        tests:
+        data_tests:
           - not_null
       - name: daily_revenue_eur
-        tests:
+        data_tests:
           - not_null
       - name: cumulative_revenue_eur
         description: Running total of revenue from the earliest date to current row
@@ -36,17 +36,17 @@ models:
       comparison in dashboards. Includes revenue ranking per month.
     columns:
       - name: month
-        tests:
+        data_tests:
           - not_null
       - name: country_id
-        tests:
+        data_tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_countries')
                 field: country_id
       - name: total_revenue_eur
-        tests:
+        data_tests:
           - not_null
       - name: country_revenue_rank
         description: Rank of this country by revenue within the month (1 = highest)
@@ -59,17 +59,17 @@ models:
       top and bottom performing specialties. Includes revenue rank within month.
     columns:
       - name: month
-        tests:
+        data_tests:
           - not_null
       - name: specialty_id
-        tests:
+        data_tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_specialties')
                 field: specialty_id
       - name: total_revenue_eur
-        tests:
+        data_tests:
           - not_null
       - name: completion_rate
         description: completed_appointments / total_appointments

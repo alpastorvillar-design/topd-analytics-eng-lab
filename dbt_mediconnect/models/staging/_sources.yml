@@ -23,14 +23,14 @@ sources:
         columns:
           - name: patient_id
             description: "Identificador único del paciente."
-            tests:
+            data_tests:
               - unique
               - not_null
           - name: country_id
-            tests:
+            data_tests:
               - not_null
           - name: acquisition_channel
-            tests:
+            data_tests:
               - accepted_values:
                   arguments:
                     values: ['seo', 'sem', 'direct', 'referral', 'social', 'email']
@@ -39,11 +39,11 @@ sources:
         description: "Tabla de médicos registrados en la plataforma."
         columns:
           - name: doctor_id
-            tests:
+            data_tests:
               - unique
               - not_null
           - name: specialty_id
-            tests:
+            data_tests:
               - not_null
 
       - name: specialties
@@ -53,7 +53,7 @@ sources:
           loaded_at_field: null
         columns:
           - name: specialty_id
-            tests:
+            data_tests:
               - unique
               - not_null
 
@@ -64,7 +64,7 @@ sources:
           loaded_at_field: null
         columns:
           - name: country_id
-            tests:
+            data_tests:
               - unique
               - not_null
 
@@ -74,16 +74,16 @@ sources:
           loaded_at_field: appointment_created_at
         columns:
           - name: appointment_id
-            tests:
+            data_tests:
               - unique
               - not_null
           - name: status
-            tests:
+            data_tests:
               - accepted_values:
                   arguments:
                     values: ['completed', 'cancelled', 'no_show', 'scheduled']
           - name: channel
-            tests:
+            data_tests:
               - accepted_values:
                   arguments:
                     values: ['web', 'app', 'phone', 'clinic']
@@ -94,11 +94,11 @@ sources:
           loaded_at_field: payment_created_at
         columns:
           - name: payment_id
-            tests:
+            data_tests:
               - unique
               - not_null
           - name: payment_status
-            tests:
+            data_tests:
               - accepted_values:
                   arguments:
                     values: ['paid', 'refunded', 'failed', 'pending']
@@ -107,16 +107,16 @@ sources:
         description: "Leads captados por la plataforma antes de convertirse en cita."
         columns:
           - name: lead_id
-            tests:
+            data_tests:
               - unique
               - not_null
           - name: lead_source
-            tests:
+            data_tests:
               - accepted_values:
                   arguments:
                     values: ['seo', 'sem', 'direct', 'referral', 'social', 'email']
           - name: lead_status
-            tests:
+            data_tests:
               - accepted_values:
                   arguments:
                     values: ['new', 'contacted', 'converted', 'lost']

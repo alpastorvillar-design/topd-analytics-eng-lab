@@ -5,9 +5,9 @@ models:
     description: "Pacientes limpios y tipados desde raw. Una fila por paciente."
     columns:
       - name: patient_id
-        tests: [unique, not_null]
+        data_tests: [unique, not_null]
       - name: acquisition_channel
-        tests:
+        data_tests:
           - accepted_values:
               arguments:
                 values: ['seo', 'sem', 'direct', 'referral', 'social', 'email']
@@ -16,31 +16,31 @@ models:
     description: "Médicos limpios y tipados desde raw. Una fila por médico."
     columns:
       - name: doctor_id
-        tests: [unique, not_null]
+        data_tests: [unique, not_null]
 
   - name: stg_specialties
     description: "Catálogo de especialidades médicas."
     columns:
       - name: specialty_id
-        tests: [unique, not_null]
+        data_tests: [unique, not_null]
 
   - name: stg_countries
     description: "Catálogo de países donde opera la plataforma."
     columns:
       - name: country_id
-        tests: [unique, not_null]
+        data_tests: [unique, not_null]
 
   - name: stg_appointments
     description: "Citas médicas limpias y tipadas."
     columns:
       - name: appointment_id
-        tests: [unique, not_null]
+        data_tests: [unique, not_null]
       - name: patient_id
-        tests: [not_null]
+        data_tests: [not_null]
       - name: doctor_id
-        tests: [not_null]
+        data_tests: [not_null]
       - name: status
-        tests:
+        data_tests:
           - accepted_values:
               arguments:
                 values: ['completed', 'cancelled', 'no_show', 'scheduled']
@@ -49,11 +49,11 @@ models:
     description: "Pagos limpios. amount_cents siempre es entero positivo."
     columns:
       - name: payment_id
-        tests: [unique, not_null]
+        data_tests: [unique, not_null]
       - name: appointment_id
-        tests: [not_null]
+        data_tests: [not_null]
       - name: payment_status
-        tests:
+        data_tests:
           - accepted_values:
               arguments:
                 values: ['paid', 'refunded', 'failed', 'pending']
@@ -62,9 +62,9 @@ models:
     description: "Leads captados. patient_id y doctor_id pueden ser NULL."
     columns:
       - name: lead_id
-        tests: [unique, not_null]
+        data_tests: [unique, not_null]
       - name: lead_status
-        tests:
+        data_tests:
           - accepted_values:
               arguments:
                 values: ['new', 'contacted', 'converted', 'lost']

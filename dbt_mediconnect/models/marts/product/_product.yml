@@ -8,19 +8,19 @@ models:
     columns:
       - name: cohort_month
         description: Month of patient's first completed appointment (cohort definition)
-        tests:
+        data_tests:
           - not_null
       - name: months_since_acquisition
         description: Months elapsed since cohort_month (0 = acquisition month)
-        tests:
+        data_tests:
           - not_null
       - name: cohort_size
         description: Total number of patients in this cohort
-        tests:
+        data_tests:
           - not_null
       - name: retained_patients
         description: Patients from the cohort who had a completed appointment this month
-        tests:
+        data_tests:
           - not_null
       - name: retention_rate
         description: retained_patients / cohort_size (NULL-safe)
@@ -31,13 +31,13 @@ models:
       under-supplied specialties for marketplace management.
     columns:
       - name: specialty_id
-        tests:
+        data_tests:
           - not_null
       - name: country_id
-        tests:
+        data_tests:
           - not_null
       - name: month
-        tests:
+        data_tests:
           - not_null
       - name: total_appointments
         description: Total appointments booked in the period
@@ -52,19 +52,19 @@ models:
       Used to identify where no-shows and cancellations concentrate.
     columns:
       - name: month
-        tests:
+        data_tests:
           - not_null
       - name: channel
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
                 values: ['web', 'app', 'phone', 'clinic']
       - name: specialty_id
-        tests:
+        data_tests:
           - not_null
       - name: country_id
-        tests:
+        data_tests:
           - not_null
       - name: completion_rate
         description: completed / total appointments
