@@ -58,7 +58,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['web', 'app', 'phone', 'clinic']
+              arguments:
+                values: ['web', 'app', 'phone', 'clinic']
       - name: specialty_id
         tests:
           - not_null

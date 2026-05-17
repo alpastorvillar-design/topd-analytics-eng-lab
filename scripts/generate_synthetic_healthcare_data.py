@@ -348,6 +348,15 @@ df_leads = pd.DataFrame(leads)
 df_leads.to_csv(OUTPUT_DIR / "leads.csv", index=False)
 print(f"  {len(df_leads)} leads")
 
+# Backfill source_lead_id en appointments desde leads convertidos
+lead_appt_map = {
+    row["converted_appointment_id"]: row["lead_id"]
+    for _, row in df_leads.iterrows()
+    if pd.notna(row["converted_appointment_id"])
+}
+df_appointments["source_lead_id"] = df_appointments["appointment_id"].map(lead_appt_map)
+df_appointments.to_csv(OUTPUT_DIR / "appointments.csv", index=False)
+
 
 # Resumen
 print("\nDatos generados en data/raw/")

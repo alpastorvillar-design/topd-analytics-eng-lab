@@ -10,12 +10,14 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('dim_countries')
-              field: country_id
+              arguments:
+                to: ref('dim_countries')
+                field: country_id
       - name: patient_segment
         tests:
           - accepted_values:
-              values: ['new', 'active', 'loyal', 'champion', 'unknown']
+              arguments:
+                values: ['new', 'active', 'loyal', 'champion', 'unknown']
 
   - name: dim_doctors
     description: "Dimensión de médicos con métricas de rendimiento y ranking."
@@ -26,20 +28,23 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('dim_specialties')
-              field: specialty_id
+              arguments:
+                to: ref('dim_specialties')
+                field: specialty_id
       - name: country_id
         tests:
           - not_null
           - relationships:
-              to: ref('dim_countries')
-              field: country_id
+              arguments:
+                to: ref('dim_countries')
+                field: country_id
       - name: is_active
         tests:
           - not_null
           - accepted_values:
-              values: [true, false]
-              quote: false
+              arguments:
+                values: [true, false]
+                quote: false
 
   - name: dim_specialties
     description: "Catálogo de especialidades médicas."
@@ -62,34 +67,40 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('dim_patients')
-              field: patient_id
+              arguments:
+                to: ref('dim_patients')
+                field: patient_id
       - name: doctor_id
         tests:
           - not_null
           - relationships:
-              to: ref('dim_doctors')
-              field: doctor_id
+              arguments:
+                to: ref('dim_doctors')
+                field: doctor_id
       - name: specialty_id
         tests:
           - not_null
           - relationships:
-              to: ref('dim_specialties')
-              field: specialty_id
+              arguments:
+                to: ref('dim_specialties')
+                field: specialty_id
       - name: country_id
         tests:
           - not_null
           - relationships:
-              to: ref('dim_countries')
-              field: country_id
+              arguments:
+                to: ref('dim_countries')
+                field: country_id
       - name: status
         tests:
           - accepted_values:
-              values: ['completed', 'cancelled', 'no_show', 'scheduled']
+              arguments:
+                values: ['completed', 'cancelled', 'no_show', 'scheduled']
       - name: channel
         tests:
           - accepted_values:
-              values: ['web', 'app', 'phone', 'clinic']
+              arguments:
+                values: ['web', 'app', 'phone', 'clinic']
       - name: appointment_date
         tests:
           - not_null
@@ -103,25 +114,29 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('fct_appointments')
-              field: appointment_id
+              arguments:
+                to: ref('fct_appointments')
+                field: appointment_id
       - name: specialty_id
         tests:
           - relationships:
-              to: ref('dim_specialties')
-              field: specialty_id
+              arguments:
+                to: ref('dim_specialties')
+                field: specialty_id
       - name: country_id
         tests:
           - relationships:
-              to: ref('dim_countries')
-              field: country_id
+              arguments:
+                to: ref('dim_countries')
+                field: country_id
       - name: amount_cents
         tests:
           - not_null
       - name: payment_status
         tests:
           - accepted_values:
-              values: ['paid', 'refunded', 'failed', 'pending']
+              arguments:
+                values: ['paid', 'refunded', 'failed', 'pending']
 
   - name: fct_leads
     description: "Hechos de leads con funnel completo lead -> cita -> pago."
@@ -132,15 +147,18 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('dim_specialties')
-              field: specialty_id
+              arguments:
+                to: ref('dim_specialties')
+                field: specialty_id
       - name: country_id
         tests:
           - not_null
           - relationships:
-              to: ref('dim_countries')
-              field: country_id
+              arguments:
+                to: ref('dim_countries')
+                field: country_id
       - name: lead_status
         tests:
           - accepted_values:
-              values: ['new', 'contacted', 'converted', 'lost']
+              arguments:
+                values: ['new', 'contacted', 'converted', 'lost']

@@ -39,7 +39,7 @@ QUALIFY revenue_rank_in_specialty <= 3
 ORDER BY d.specialty_id, revenue_rank_in_specialty;
 
 
--- 3. Monthly appointment volume per doctor (last 12 months)
+-- 3. Monthly appointment volume per doctor (last 12 months of dataset)
 SELECT
     DATE_TRUNC(a.appointment_date, MONTH)   AS month,
     a.doctor_id,
@@ -50,19 +50,26 @@ SELECT
         COUNTIF(a.status = 'no_show'), COUNT(*)
     )                                       AS no_show_rate
 FROM {{ ref('fct_appointments') }} AS a
-WHERE a.appointment_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH)
+WHERE a.appointment_date >= DATE_SUB(
+    (SELECT MAX(appointment_date) FROM {{ ref('fct_appointments') }}),
+    INTERVAL 12 MONTH
+)
 GROUP BY month, a.doctor_id
 ORDER BY month DESC, total_appointments DESC;
 
 
--- 4. Inactive doctors (no completed appointment in last 90 days)
+-- 4. Inactive doctors (no completed appointment in last 90 days of dataset)
 SELECT
     d.doctor_id,
     d.full_name,
     d.specialty_id,
     d.is_active,
     MAX(a.appointment_date)              AS last_appointment_date,
-    DATE_DIFF(CURRENT_DATE(), MAX(a.appointment_date), DAY) AS days_inactive
+    DATE_DIFF(
+        (SELECT MAX(appointment_date) FROM {{ ref('fct_appointments') }}),
+        MAX(a.appointment_date),
+        DAY
+    )                                    AS days_inactive
 FROM {{ ref('dim_doctors') }}        AS d
 LEFT JOIN {{ ref('fct_appointments') }} AS a
     ON a.doctor_id = d.doctor_id AND a.status = 'completed'

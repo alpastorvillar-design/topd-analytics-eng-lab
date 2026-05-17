@@ -3,3 +3,5 @@ pandas==2.2.3
 google-cloud-bigquery==3.34.0
 python-dotenv==1.1.0
 pyarrow>=16.0.0
+dbt-bigquery~=1.11.0
+sqlfluff>=3.0.0

@@ -9,7 +9,8 @@ models:
       - name: acquisition_channel
         tests:
           - accepted_values:
-              values: ['seo', 'sem', 'direct', 'referral', 'social', 'email']
+              arguments:
+                values: ['seo', 'sem', 'direct', 'referral', 'social', 'email']
 
   - name: stg_doctors
     description: "Médicos limpios y tipados desde raw. Una fila por médico."
@@ -41,7 +42,8 @@ models:
       - name: status
         tests:
           - accepted_values:
-              values: ['completed', 'cancelled', 'no_show', 'scheduled']
+              arguments:
+                values: ['completed', 'cancelled', 'no_show', 'scheduled']
 
   - name: stg_payments
     description: "Pagos limpios. amount_cents siempre es entero positivo."
@@ -53,7 +55,8 @@ models:
       - name: payment_status
         tests:
           - accepted_values:
-              values: ['paid', 'refunded', 'failed', 'pending']
+              arguments:
+                values: ['paid', 'refunded', 'failed', 'pending']
 
   - name: stg_leads
     description: "Leads captados. patient_id y doctor_id pueden ser NULL."
@@ -63,4 +66,5 @@ models:
       - name: lead_status
         tests:
           - accepted_values:
-              values: ['new', 'contacted', 'converted', 'lost']
+              arguments:
+                values: ['new', 'contacted', 'converted', 'lost']
