@@ -6,8 +6,8 @@
 -- COUNTIF(condiciÃ³n): BigQuery-specific. Equivale a COUNT(CASE WHEN ... END).
 -- SAFE_DIVIDE(a, b): divide sin error si b = 0. Devuelve NULL en vez de crash.
 -- DATE_TRUNC(fecha, MONTH): trunca fecha al primer dÃ­a del mes.
---   Ãštil para cohort analysis: todos los pacientes del mismo mes de registro
---   forman una cohorte.
+--   Ãštil para cohort analysis: todos los pacientes con primera cita completada
+--   en el mismo mes forman una cohorte.
 
 with appointments as (
     select * from {{ ref('int_appointments_enriched') }}
@@ -30,6 +30,8 @@ patient_metrics as (
         -- Fechas
         min(date(a.appointment_start_at))                  as first_appointment_date,
         max(date(a.appointment_start_at))                  as last_appointment_date,
+        min(date(case when a.status = 'completed'
+            then a.appointment_start_at end))              as first_completed_appointment_date,
         date_diff(
             max(date(a.appointment_start_at)),
             min(date(a.appointment_start_at)),
@@ -63,8 +65,8 @@ final as (
         p.patient_id,
         p.acquisition_channel,
         p.country_id,
-        -- Mes de registro -> cohorte para retention analysis
-        date_trunc(date(p.created_at), month)              as cohort_month,
+        -- Mes de primera cita completada -> cohorte para retention analysis
+        date_trunc(m.first_completed_appointment_date, month) as cohort_month,
         m.* except (patient_id)
 
     from patients p

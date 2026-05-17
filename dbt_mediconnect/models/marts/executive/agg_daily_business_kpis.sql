@@ -82,4 +82,5 @@ final as (
 )
 
 select * from final
+where total_appointments > 0
 order by date

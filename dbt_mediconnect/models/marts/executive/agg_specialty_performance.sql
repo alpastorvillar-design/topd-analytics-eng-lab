@@ -10,7 +10,8 @@ with appointments as (
         countif(status = 'no_show')             as no_show_appointments,
         count(distinct patient_id)              as unique_patients,
         count(distinct doctor_id)               as active_doctors,
-        sum(amount_eur)                         as total_revenue_eur
+        sum(case when payment_status = 'paid'
+            then amount_eur else 0 end)         as total_revenue_eur
     from {{ ref('fct_appointments') }}
     group by month, specialty_id
 ),

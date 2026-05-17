@@ -42,8 +42,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('dim_countries')
-              field: country_id
+              arguments:
+                to: ref('dim_countries')
+                field: country_id
       - name: total_revenue_eur
         tests:
           - not_null
@@ -64,8 +65,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('dim_specialties')
-              field: specialty_id
+              arguments:
+                to: ref('dim_specialties')
+                field: specialty_id
       - name: total_revenue_eur
         tests:
           - not_null
