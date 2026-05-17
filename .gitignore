@@ -39,6 +39,8 @@ desktop.ini
 dbt_mediconnect/target/
 dbt_mediconnect/logs/
 dbt_mediconnect/.user.yml
+dbt_mediconnect/package-lock.yml
+dbt_mediconnect/dbt_packages/
 
 # === PRIVADO - No al repo público ===
 notes/
