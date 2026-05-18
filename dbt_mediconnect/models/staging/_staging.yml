@@ -5,66 +5,168 @@ models:
     description: "Pacientes limpios y tipados desde raw. Una fila por paciente."
     columns:
       - name: patient_id
+        description: Unique patient identifier.
         data_tests: [unique, not_null]
+      - name: full_name
+        description: Patient full name.
+      - name: gender
+        description: Patient gender.
+      - name: birth_date
+        description: Date of birth (cast to DATE).
+      - name: country_id
+        description: Country of residence; FK to dim_countries.
+      - name: city
+        description: City of residence.
+      - name: created_at
+        description: Account registration timestamp (cast to TIMESTAMP).
       - name: acquisition_channel
+        description: Channel through which the patient was acquired — seo, sem, direct, referral, social, email.
         data_tests:
           - accepted_values:
               arguments:
                 values: ['seo', 'sem', 'direct', 'referral', 'social', 'email']
+      - name: is_active
+        description: Whether the patient account is currently active (cast to BOOL).
 
   - name: stg_doctors
     description: "Médicos limpios y tipados desde raw. Una fila por médico."
     columns:
       - name: doctor_id
+        description: Unique doctor identifier.
         data_tests: [unique, not_null]
+      - name: full_name
+        description: Doctor full name.
+      - name: specialty_id
+        description: Medical specialty; FK to dim_specialties.
+      - name: country_id
+        description: Country where the doctor operates; FK to dim_countries.
+      - name: city
+        description: City where the doctor practices.
+      - name: created_at
+        description: Profile creation timestamp (cast to TIMESTAMP).
+      - name: is_active
+        description: Whether the doctor is currently active on the platform (cast to BOOL).
+      - name: rating
+        description: Aggregate doctor rating on a 0–5 scale, rounded to 2 decimal places.
+      - name: years_experience
+        description: Years of professional experience (cast to INT64).
+      - name: accepts_online_booking
+        description: Whether the doctor accepts online bookings (cast to BOOL).
 
   - name: stg_specialties
     description: "Catálogo de especialidades médicas."
     columns:
       - name: specialty_id
+        description: Unique specialty identifier.
         data_tests: [unique, not_null]
+      - name: specialty_name
+        description: Full name of the medical specialty (e.g. Cardiology, Dermatology).
+      - name: specialty_group
+        description: Broader specialty group used for aggregation.
 
   - name: stg_countries
     description: "Catálogo de países donde opera la plataforma."
     columns:
       - name: country_id
+        description: Unique country identifier.
         data_tests: [unique, not_null]
+      - name: country_name
+        description: Full country name.
+      - name: region
+        description: Geographic region (e.g. Western Europe, LATAM).
+      - name: currency
+        description: Default ISO 4217 currency code for this country.
 
   - name: stg_appointments
     description: "Citas médicas limpias y tipadas."
     columns:
       - name: appointment_id
+        description: Unique appointment identifier.
         data_tests: [unique, not_null]
       - name: patient_id
+        description: FK to stg_patients.
         data_tests: [not_null]
       - name: doctor_id
+        description: FK to stg_doctors.
         data_tests: [not_null]
+      - name: appointment_created_at
+        description: Timestamp when the appointment was booked (cast to TIMESTAMP).
+      - name: appointment_start_at
+        description: Scheduled start timestamp of the appointment (cast to TIMESTAMP).
+      - name: updated_at
+        description: Last modification timestamp (cast to TIMESTAMP).
       - name: status
+        description: Appointment outcome — completed, cancelled, no_show, scheduled (lowercased).
         data_tests:
           - accepted_values:
               arguments:
                 values: ['completed', 'cancelled', 'no_show', 'scheduled']
+      - name: channel
+        description: Booking channel — web, app, phone, clinic (lowercased).
+      - name: cancellation_reason
+        description: Reason for cancellation; NULL for non-cancelled appointments. Empty strings coerced to NULL via NULLIF.
+      - name: is_first_appointment
+        description: True if this is the patient's first appointment on the platform (cast to BOOL).
+      - name: source_lead_id
+        description: ID of the originating lead if the appointment came from a lead campaign; NULL otherwise.
 
   - name: stg_payments
     description: "Pagos limpios. amount_cents siempre es entero positivo."
     columns:
       - name: payment_id
+        description: Unique payment identifier.
         data_tests: [unique, not_null]
       - name: appointment_id
+        description: FK to stg_appointments.
         data_tests: [not_null]
-      - name: payment_status
+      - name: patient_id
+        description: FK to stg_patients.
+      - name: doctor_id
+        description: FK to stg_doctors.
+      - name: payment_created_at
+        description: Full timestamp of payment capture (cast to TIMESTAMP).
+      - name: updated_at
+        description: Last modification timestamp (cast to TIMESTAMP).
+      - name: amount_cents
+        description: Payment amount in cents stored as INT64 to avoid floating-point precision issues. 1500 = €15.00.
         data_tests:
           - accepted_values:
               arguments:
                 values: ['paid', 'refunded', 'failed', 'pending']
+      - name: currency
+        description: ISO 4217 currency code, uppercased.
+      - name: payment_status
+        description: Payment status — paid, refunded, failed, pending (lowercased).
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['paid', 'refunded', 'failed', 'pending']
+      - name: payment_method
+        description: Payment method used by the patient (e.g. card, bank_transfer), lowercased.
 
   - name: stg_leads
     description: "Leads captados. patient_id y doctor_id pueden ser NULL."
     columns:
       - name: lead_id
+        description: Unique lead identifier.
         data_tests: [unique, not_null]
+      - name: patient_id
+        description: FK to stg_patients. NULL for anonymous leads.
+      - name: doctor_id
+        description: FK to stg_doctors. NULL if no specific doctor was targeted.
+      - name: specialty_id
+        description: Medical specialty targeted by the lead; FK to stg_specialties.
+      - name: country_id
+        description: Country where the lead originated; FK to stg_countries.
+      - name: created_at
+        description: Timestamp when the lead was captured (cast to TIMESTAMP).
+      - name: lead_source
+        description: Acquisition source of the lead — seo, sem, direct, referral, social, email (lowercased).
       - name: lead_status
+        description: Current lead status — new, contacted, converted, lost (lowercased).
         data_tests:
           - accepted_values:
               arguments:
                 values: ['new', 'contacted', 'converted', 'lost']
+      - name: converted_appointment_id
+        description: ID of the appointment created if this lead converted; NULL otherwise.

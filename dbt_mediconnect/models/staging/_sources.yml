@@ -22,29 +22,61 @@ sources:
         description: "Tabla de pacientes registrados en la plataforma."
         columns:
           - name: patient_id
-            description: "Identificador único del paciente."
+            description: Unique patient identifier.
             data_tests:
               - unique
               - not_null
+          - name: full_name
+            description: Patient full name.
+          - name: gender
+            description: Patient gender.
+          - name: birth_date
+            description: Date of birth.
           - name: country_id
+            description: Country of residence.
             data_tests:
               - not_null
+          - name: city
+            description: City of residence.
+          - name: created_at
+            description: Account registration timestamp.
           - name: acquisition_channel
+            description: Channel through which the patient was acquired.
             data_tests:
               - accepted_values:
                   arguments:
                     values: ['seo', 'sem', 'direct', 'referral', 'social', 'email']
+          - name: is_active
+            description: Whether the patient account is currently active.
 
       - name: doctors
         description: "Tabla de médicos registrados en la plataforma."
         columns:
           - name: doctor_id
+            description: Unique doctor identifier.
             data_tests:
               - unique
               - not_null
+          - name: full_name
+            description: Doctor full name.
           - name: specialty_id
+            description: Medical specialty identifier.
             data_tests:
               - not_null
+          - name: country_id
+            description: Country where the doctor operates.
+          - name: city
+            description: City where the doctor practices.
+          - name: created_at
+            description: Profile creation timestamp.
+          - name: is_active
+            description: Whether the doctor is currently active on the platform.
+          - name: rating
+            description: Aggregate doctor rating on a 0–5 scale.
+          - name: years_experience
+            description: Years of professional experience.
+          - name: accepts_online_booking
+            description: Whether the doctor accepts online bookings.
 
       - name: specialties
         description: "Catálogo de especialidades médicas."
@@ -53,9 +85,14 @@ sources:
           loaded_at_field: null
         columns:
           - name: specialty_id
+            description: Unique specialty identifier.
             data_tests:
               - unique
               - not_null
+          - name: specialty_name
+            description: Full name of the medical specialty.
+          - name: specialty_group
+            description: Broader specialty group used for aggregation.
 
       - name: countries
         description: "Catálogo de países donde opera la plataforma."
@@ -64,9 +101,16 @@ sources:
           loaded_at_field: null
         columns:
           - name: country_id
+            description: Unique country identifier.
             data_tests:
               - unique
               - not_null
+          - name: country_name
+            description: Full country name.
+          - name: region
+            description: Geographic region (e.g. Western Europe, LATAM).
+          - name: currency
+            description: Default ISO 4217 currency code for this country.
 
       - name: appointments
         description: "Citas médicas creadas en la plataforma."
@@ -74,19 +118,38 @@ sources:
           loaded_at_field: appointment_created_at
         columns:
           - name: appointment_id
+            description: Unique appointment identifier.
             data_tests:
               - unique
               - not_null
+          - name: patient_id
+            description: FK to patients table.
+          - name: doctor_id
+            description: FK to doctors table.
+          - name: appointment_created_at
+            description: Timestamp when the appointment was booked.
+          - name: appointment_start_at
+            description: Scheduled start timestamp of the appointment.
+          - name: updated_at
+            description: Last modification timestamp.
           - name: status
+            description: Appointment outcome — completed, cancelled, no_show, scheduled.
             data_tests:
               - accepted_values:
                   arguments:
                     values: ['completed', 'cancelled', 'no_show', 'scheduled']
           - name: channel
+            description: Booking channel — web, app, phone, clinic.
             data_tests:
               - accepted_values:
                   arguments:
                     values: ['web', 'app', 'phone', 'clinic']
+          - name: cancellation_reason
+            description: Reason for cancellation; NULL for non-cancelled appointments.
+          - name: is_first_appointment
+            description: True if this is the patient's first appointment on the platform.
+          - name: source_lead_id
+            description: ID of the originating lead if applicable; NULL otherwise.
 
       - name: payments
         description: "Pagos asociados a citas médicas."
@@ -94,29 +157,62 @@ sources:
           loaded_at_field: payment_created_at
         columns:
           - name: payment_id
+            description: Unique payment identifier.
             data_tests:
               - unique
               - not_null
+          - name: appointment_id
+            description: FK to appointments table.
+          - name: patient_id
+            description: FK to patients table.
+          - name: doctor_id
+            description: FK to doctors table.
+          - name: payment_created_at
+            description: Full timestamp of payment capture.
+          - name: updated_at
+            description: Last modification timestamp.
+          - name: amount_cents
+            description: Payment amount in cents (integer). 1500 = €15.00.
+          - name: currency
+            description: ISO 4217 currency code.
           - name: payment_status
+            description: Payment status — paid, refunded, failed, pending.
             data_tests:
               - accepted_values:
                   arguments:
                     values: ['paid', 'refunded', 'failed', 'pending']
+          - name: payment_method
+            description: Payment method used (e.g. card, bank_transfer).
 
       - name: leads
         description: "Leads captados por la plataforma antes de convertirse en cita."
         columns:
           - name: lead_id
+            description: Unique lead identifier.
             data_tests:
               - unique
               - not_null
+          - name: patient_id
+            description: FK to patients; NULL for anonymous leads.
+          - name: doctor_id
+            description: FK to doctors; NULL if no specific doctor was targeted.
+          - name: specialty_id
+            description: Medical specialty targeted by the lead.
+          - name: country_id
+            description: Country where the lead originated.
+          - name: created_at
+            description: Timestamp when the lead was captured.
           - name: lead_source
+            description: Acquisition source of the lead.
             data_tests:
               - accepted_values:
                   arguments:
                     values: ['seo', 'sem', 'direct', 'referral', 'social', 'email']
           - name: lead_status
+            description: Current lead status — new, contacted, converted, lost.
             data_tests:
               - accepted_values:
                   arguments:
                     values: ['new', 'contacted', 'converted', 'lost']
+          - name: converted_appointment_id
+            description: ID of the appointment created if this lead converted; NULL otherwise.

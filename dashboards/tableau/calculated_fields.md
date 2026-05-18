@@ -35,7 +35,7 @@ SUM(IF [status] = "no_show" THEN 1 ELSE 0 END) / COUNT([appointment_id])
 SUM(IF [status] = "cancelled" THEN 1 ELSE 0 END) / COUNT([appointment_id])
 
 // Lead Conversion Rate
-SUM(IF [converted_to_appointment] = TRUE THEN 1 ELSE 0 END) / COUNT([lead_id])
+SUM(IF [is_converted_to_appointment] = TRUE THEN 1 ELSE 0 END) / COUNT([lead_id])
 ```
 
 ---
@@ -61,22 +61,15 @@ DATETRUNC('month', [appointment_date]) = DATETRUNC('month', TODAY())
 ## Cohort Retention (Cohort Heatmap)
 
 Used in the Cohort Retention workbook with `mart_patient_retention`.
-The mart already has `retention_rate_m1` through `retention_rate_m6`.
-Reshape with a parameter to select the month offset:
+The mart is already in long format: one row per `cohort_month` and `months_since_acquisition`.
+Use the month offset field directly in the view:
 
 ```
-// Dynamic retention column selector
-CASE [Month Offset Parameter]
-  WHEN 1 THEN [retention_rate_m1]
-  WHEN 2 THEN [retention_rate_m2]
-  WHEN 3 THEN [retention_rate_m3]
-  WHEN 4 THEN [retention_rate_m4]
-  WHEN 5 THEN [retention_rate_m5]
-  WHEN 6 THEN [retention_rate_m6]
-END
+// Retention Rate %
+SUM([retention_rate])
 ```
 
-For the heatmap: Rows = `cohort_month`, Columns = Month Offset (1–6), Color = retention rate.
+For the heatmap: Rows = `cohort_month`, Columns = `months_since_acquisition` (1-6), Color = retention rate.
 Mark type: **Square**. Color palette: Sequential (white -> blue or white -> green).
 
 ---

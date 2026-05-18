@@ -8,27 +8,42 @@ models:
       computed with SUM OVER window functions. Feeds the executive dashboard.
     columns:
       - name: date
-        description: Calendar date
+        description: Calendar date.
         data_tests:
           - not_null
           - unique
       - name: total_appointments
+        description: Total appointments booked on this date.
         data_tests:
           - not_null
       - name: completed_appointments
+        description: Appointments with status 'completed' on this date.
         data_tests:
           - not_null
+      - name: no_show_appointments
+        description: Appointments where the patient did not attend on this date.
+      - name: new_patient_appointments
+        description: Appointments flagged as the patient's first ever visit (is_first_appointment = true).
       - name: daily_revenue_eur
+        description: Total revenue from paid payments captured on this date, in euros.
         data_tests:
           - not_null
-      - name: cumulative_revenue_eur
-        description: Running total of revenue from the earliest date to current row
-      - name: cumulative_appointments
-        description: Running total of appointments
+      - name: paid_payments
+        description: Count of payments with status 'paid' captured on this date.
+      - name: refunded_payments
+        description: Count of payments with status 'refunded' on this date.
+      - name: total_leads
+        description: Total leads created on this date.
+      - name: converted_leads
+        description: Leads created on this date that converted to an appointment.
       - name: completion_rate
-        description: completed_appointments / total_appointments (SAFE_DIVIDE)
+        description: completed_appointments / total_appointments (SAFE_DIVIDE).
       - name: lead_conversion_rate
-        description: converted_leads / total_leads (SAFE_DIVIDE)
+        description: converted_leads / total_leads (SAFE_DIVIDE).
+      - name: cumulative_revenue_eur
+        description: Running total of revenue from the earliest date to the current row (SUM OVER unbounded preceding).
+      - name: cumulative_appointments
+        description: Running total of appointments from the earliest date to the current row (SUM OVER unbounded preceding).
 
   - name: agg_monthly_country_kpis
     description: >
@@ -36,22 +51,41 @@ models:
       comparison in dashboards. Includes revenue ranking per month.
     columns:
       - name: month
+        description: Calendar month (first day of the month).
         data_tests:
           - not_null
       - name: country_id
+        description: FK to dim_countries.
         data_tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_countries')
                 field: country_id
+      - name: country_name
+        description: Full country name; denormalised from dim_countries.
+      - name: region
+        description: Geographic region; denormalised from dim_countries.
+      - name: total_appointments
+        description: Total appointments booked in this country and month.
+      - name: completed_appointments
+        description: Appointments with status 'completed' in this country and month.
+      - name: no_show_appointments
+        description: Appointments where the patient did not attend in this country and month.
+      - name: unique_patients
+        description: Distinct patients with at least one appointment in this country and month.
+      - name: active_doctors
+        description: Distinct doctors with at least one appointment in this country and month.
       - name: total_revenue_eur
+        description: Total revenue from paid payments in this country and month, in euros.
         data_tests:
           - not_null
-      - name: country_revenue_rank
-        description: Rank of this country by revenue within the month (1 = highest)
+      - name: completion_rate
+        description: completed_appointments / total_appointments (SAFE_DIVIDE).
       - name: revenue_per_patient
-        description: total_revenue_eur / unique_patients
+        description: total_revenue_eur / unique_patients (SAFE_DIVIDE).
+      - name: country_revenue_rank
+        description: Rank of this country by revenue within the month (1 = highest revenue). Ties share the same rank (RANK function).
 
   - name: agg_specialty_performance
     description: >
@@ -59,21 +93,38 @@ models:
       top and bottom performing specialties. Includes revenue rank within month.
     columns:
       - name: month
+        description: Calendar month (first day of the month).
         data_tests:
           - not_null
       - name: specialty_id
+        description: FK to dim_specialties.
         data_tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_specialties')
                 field: specialty_id
+      - name: specialty_name
+        description: Full name of the medical specialty; denormalised from dim_specialties.
+      - name: specialty_group
+        description: Broader specialty group; denormalised from dim_specialties.
+      - name: total_appointments
+        description: Total appointments for this specialty and month.
+      - name: completed_appointments
+        description: Appointments with status 'completed' for this specialty and month.
+      - name: no_show_appointments
+        description: Appointments where the patient did not attend for this specialty and month.
+      - name: unique_patients
+        description: Distinct patients with at least one appointment in this specialty and month.
+      - name: active_doctors
+        description: Distinct doctors with at least one appointment in this specialty and month.
       - name: total_revenue_eur
+        description: Total revenue from paid appointments in this specialty and month, in euros.
         data_tests:
           - not_null
       - name: completion_rate
-        description: completed_appointments / total_appointments
+        description: completed_appointments / total_appointments (SAFE_DIVIDE).
       - name: appointments_per_doctor
-        description: total_appointments / active_doctors
+        description: total_appointments / active_doctors (SAFE_DIVIDE).
       - name: specialty_revenue_rank
-        description: Rank by revenue within the month (1 = highest revenue specialty)
+        description: Rank by revenue within the month (1 = highest revenue specialty). Ties share the same rank (RANK function).

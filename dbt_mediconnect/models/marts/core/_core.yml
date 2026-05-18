@@ -3,17 +3,86 @@ version: 2
 models:
   - name: dim_patients
     description: "Dimensión de pacientes con métricas de ciclo de vida y segmento."
+    config:
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns: [patient_id]
+        warn_unenforced: false
+      - type: foreign_key
+        columns: [country_id]
+        to: ref('dim_countries')
+        to_columns: [country_id]
+        warn_unenforced: false
     columns:
       - name: patient_id
+        description: Unique patient identifier.
+        data_type: string
         data_tests: [unique, not_null]
+      - name: full_name
+        description: Patient full name.
+        data_type: string
+      - name: gender
+        description: Patient gender.
+        data_type: string
+      - name: birth_date
+        description: Date of birth.
+        data_type: date
+      - name: current_age
+        description: Age in years calculated at query time.
+        data_type: int64
       - name: country_id
+        description: FK to dim_countries. Country of residence.
+        data_type: string
         data_tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_countries')
                 field: country_id
+      - name: city
+        description: City of residence.
+        data_type: string
+      - name: created_at
+        description: Account registration timestamp.
+        data_type: timestamp
+      - name: acquisition_channel
+        description: Channel through which the patient was acquired (e.g. organic, paid, referral).
+        data_type: string
+      - name: is_active
+        description: Whether the patient account is currently active.
+        data_type: boolean
+      - name: total_appointments
+        description: Lifetime count of appointments across all statuses.
+        data_type: int64
+      - name: completed_appointments
+        description: Lifetime count of completed appointments.
+        data_type: int64
+      - name: total_revenue_cents
+        description: Lifetime revenue from this patient in cents.
+        data_type: int64
+      - name: total_revenue_eur
+        description: Lifetime revenue from this patient in euros (amount_cents / 100).
+        data_type: float64
+      - name: first_appointment_date
+        description: Date of the patient's first appointment.
+        data_type: date
+      - name: last_appointment_date
+        description: Date of the patient's most recent appointment.
+        data_type: date
+      - name: cohort_month
+        description: Month of first completed appointment; used as retention cohort key.
+        data_type: date
+      - name: no_show_rate
+        description: Proportion of appointments where the patient did not attend.
+        data_type: float64
+      - name: cancellation_rate
+        description: Proportion of appointments cancelled.
+        data_type: float64
       - name: patient_segment
+        description: Lifecycle segment derived from completed_appointments — new, active, loyal, champion, unknown.
+        data_type: string
         data_tests:
           - accepted_values:
               arguments:
@@ -21,10 +90,34 @@ models:
 
   - name: dim_doctors
     description: "Dimensión de médicos con métricas de rendimiento y ranking."
+    config:
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns: [doctor_id]
+        warn_unenforced: false
+      - type: foreign_key
+        columns: [specialty_id]
+        to: ref('dim_specialties')
+        to_columns: [specialty_id]
+        warn_unenforced: false
+      - type: foreign_key
+        columns: [country_id]
+        to: ref('dim_countries')
+        to_columns: [country_id]
+        warn_unenforced: false
     columns:
       - name: doctor_id
+        description: Unique doctor identifier.
+        data_type: string
         data_tests: [unique, not_null]
+      - name: full_name
+        description: Doctor full name.
+        data_type: string
       - name: specialty_id
+        description: FK to dim_specialties.
+        data_type: string
         data_tests:
           - not_null
           - relationships:
@@ -32,38 +125,151 @@ models:
                 to: ref('dim_specialties')
                 field: specialty_id
       - name: country_id
+        description: FK to dim_countries. Country where the doctor operates.
+        data_type: string
         data_tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_countries')
                 field: country_id
+      - name: city
+        description: City where the doctor practices.
+        data_type: string
+      - name: created_at
+        description: Profile creation timestamp.
+        data_type: timestamp
       - name: is_active
+        description: Whether the doctor is currently active on the platform.
+        data_type: boolean
         data_tests:
           - not_null
           - accepted_values:
               arguments:
                 values: [true, false]
                 quote: false
+      - name: rating
+        description: Aggregate doctor rating on a 0–5 scale.
+        data_type: float64
+      - name: years_experience
+        description: Years of professional experience.
+        data_type: int64
+      - name: accepts_online_booking
+        description: Whether the doctor accepts online bookings.
+        data_type: boolean
+      - name: total_appointments
+        description: Lifetime appointment count across all statuses.
+        data_type: int64
+      - name: completed_appointments
+        description: Lifetime count of completed appointments.
+        data_type: int64
+      - name: total_revenue_cents
+        description: Lifetime revenue generated by this doctor in cents.
+        data_type: int64
+      - name: total_revenue_eur
+        description: Lifetime revenue generated by this doctor in euros.
+        data_type: float64
+      - name: no_show_rate
+        description: Proportion of appointments where the patient did not attend.
+        data_type: float64
+      - name: completion_rate
+        description: Proportion of appointments with status 'completed'.
+        data_type: float64
+      - name: distinct_patients
+        description: Number of unique patients treated.
+        data_type: int64
+      - name: revenue_rank_in_specialty
+        description: Revenue rank among doctors in the same specialty (1 = highest earner).
+        data_type: int64
+      - name: first_appointment_date
+        description: Date of the doctor's first appointment on the platform.
+        data_type: date
+      - name: last_appointment_date
+        description: Date of the doctor's most recent appointment.
+        data_type: date
 
   - name: dim_specialties
     description: "Catálogo de especialidades médicas."
+    config:
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns: [specialty_id]
+        warn_unenforced: false
     columns:
       - name: specialty_id
+        description: Unique specialty identifier.
+        data_type: string
         data_tests: [unique, not_null]
+      - name: specialty_name
+        description: Full name of the medical specialty (e.g. Cardiology, Dermatology).
+        data_type: string
+      - name: specialty_group
+        description: Broader specialty group used for aggregation.
+        data_type: string
 
   - name: dim_countries
     description: "Catálogo de países."
+    config:
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns: [country_id]
+        warn_unenforced: false
     columns:
       - name: country_id
+        description: Unique country identifier.
+        data_type: string
         data_tests: [unique, not_null]
+      - name: country_name
+        description: Full country name.
+        data_type: string
+      - name: region
+        description: Geographic region (e.g. Western Europe, LATAM).
+        data_type: string
+      - name: currency
+        description: Default ISO 4217 currency code for this country.
+        data_type: string
 
   - name: fct_appointments
     description: "Hechos de citas. Particionado por mes, clusterizado por país/especialidad/status. Materialización incremental con merge."
+    config:
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns: [appointment_id]
+        warn_unenforced: false
+      - type: foreign_key
+        columns: [patient_id]
+        to: ref('dim_patients')
+        to_columns: [patient_id]
+        warn_unenforced: false
+      - type: foreign_key
+        columns: [doctor_id]
+        to: ref('dim_doctors')
+        to_columns: [doctor_id]
+        warn_unenforced: false
+      - type: foreign_key
+        columns: [specialty_id]
+        to: ref('dim_specialties')
+        to_columns: [specialty_id]
+        warn_unenforced: false
+      - type: foreign_key
+        columns: [country_id]
+        to: ref('dim_countries')
+        to_columns: [country_id]
+        warn_unenforced: false
     columns:
       - name: appointment_id
+        description: Unique appointment identifier.
+        data_type: string
         data_tests: [unique, not_null]
       - name: patient_id
+        description: FK to dim_patients.
+        data_type: string
         data_tests:
           - not_null
           - relationships:
@@ -71,6 +277,8 @@ models:
                 to: ref('dim_patients')
                 field: patient_id
       - name: doctor_id
+        description: FK to dim_doctors.
+        data_type: string
         data_tests:
           - not_null
           - relationships:
@@ -78,6 +286,8 @@ models:
                 to: ref('dim_doctors')
                 field: doctor_id
       - name: specialty_id
+        description: FK to dim_specialties; denormalised from the doctor.
+        data_type: string
         data_tests:
           - not_null
           - relationships:
@@ -85,65 +295,197 @@ models:
                 to: ref('dim_specialties')
                 field: specialty_id
       - name: country_id
+        description: FK to dim_countries; denormalised from the doctor.
+        data_type: string
         data_tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_countries')
                 field: country_id
+      - name: appointment_date
+        description: Calendar date of the appointment; partition key (MONTH granularity).
+        data_type: date
+        data_tests:
+          - not_null
+      - name: appointment_created_at
+        description: Timestamp when the appointment was booked.
+        data_type: timestamp
+      - name: appointment_start_at
+        description: Scheduled start timestamp of the appointment.
+        data_type: timestamp
+      - name: updated_at
+        description: Last modification timestamp; drives the incremental merge strategy.
+        data_type: timestamp
       - name: status
+        description: Appointment outcome — completed, cancelled, no_show, scheduled.
+        data_type: string
         data_tests:
           - accepted_values:
               arguments:
                 values: ['completed', 'cancelled', 'no_show', 'scheduled']
       - name: channel
+        description: Booking channel — web, app, phone, clinic.
+        data_type: string
         data_tests:
           - accepted_values:
               arguments:
                 values: ['web', 'app', 'phone', 'clinic']
-      - name: appointment_date
-        data_tests:
-          - not_null
+      - name: cancellation_reason
+        description: Reason for cancellation; NULL for non-cancelled appointments.
+        data_type: string
+      - name: is_first_appointment
+        description: True if this is the patient's first appointment on the platform.
+        data_type: boolean
+      - name: source_lead_id
+        description: FK to fct_leads if the appointment originated from a lead; NULL otherwise.
+        data_type: string
+      - name: patient_age_at_appointment
+        description: Patient age in years at the time of the appointment.
+        data_type: int64
+      - name: doctor_rating
+        description: Doctor's aggregate rating at the time of the appointment.
+        data_type: float64
+      - name: patient_appointment_sequence
+        description: Sequential visit number for this patient (1 = first ever appointment).
+        data_type: int64
+      - name: days_since_last_appointment
+        description: Days elapsed since the patient's previous appointment; NULL for first visit.
+        data_type: int64
+      - name: amount_cents
+        description: Payment amount in cents; 0 if no payment collected.
+        data_type: int64
+      - name: amount_eur
+        description: Payment amount in euros (amount_cents / 100).
+        data_type: float64
+      - name: payment_status
+        description: Payment outcome — paid, refunded, failed, pending; NULL if no payment collected.
+        data_type: string
+      - name: is_missing_payment
+        description: True if the appointment is completed but has no associated payment record.
+        data_type: boolean
 
   - name: fct_payments
     description: "Hechos de pagos. Particionado por mes de pago."
+    config:
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns: [payment_id]
+        warn_unenforced: false
+      - type: foreign_key
+        columns: [appointment_id]
+        to: ref('fct_appointments')
+        to_columns: [appointment_id]
+        warn_unenforced: false
+      - type: foreign_key
+        columns: [specialty_id]
+        to: ref('dim_specialties')
+        to_columns: [specialty_id]
+        warn_unenforced: false
+      - type: foreign_key
+        columns: [country_id]
+        to: ref('dim_countries')
+        to_columns: [country_id]
+        warn_unenforced: false
     columns:
       - name: payment_id
+        description: Unique payment identifier.
+        data_type: string
         data_tests: [unique, not_null]
       - name: appointment_id
+        description: FK to fct_appointments.
+        data_type: string
         data_tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('fct_appointments')
                 field: appointment_id
+      - name: patient_id
+        description: FK to dim_patients.
+        data_type: string
+      - name: doctor_id
+        description: FK to dim_doctors.
+        data_type: string
       - name: specialty_id
+        description: FK to dim_specialties; denormalised from the doctor.
+        data_type: string
         data_tests:
           - relationships:
               arguments:
                 to: ref('dim_specialties')
                 field: specialty_id
       - name: country_id
+        description: FK to dim_countries; denormalised from the doctor.
+        data_type: string
         data_tests:
           - relationships:
               arguments:
                 to: ref('dim_countries')
                 field: country_id
+      - name: payment_date
+        description: Calendar date of payment capture; partition key (MONTH granularity).
+        data_type: date
+      - name: payment_created_at
+        description: Full timestamp of payment capture.
+        data_type: timestamp
+      - name: updated_at
+        description: Last modification timestamp.
+        data_type: timestamp
       - name: amount_cents
+        description: Payment amount in cents.
+        data_type: int64
         data_tests:
           - not_null
+      - name: amount_eur
+        description: Payment amount in euros (amount_cents / 100).
+        data_type: float64
+      - name: currency
+        description: ISO 4217 currency code for the payment.
+        data_type: string
       - name: payment_status
+        description: Payment status — paid, refunded, failed, pending.
+        data_type: string
         data_tests:
           - accepted_values:
               arguments:
                 values: ['paid', 'refunded', 'failed', 'pending']
+      - name: payment_method
+        description: Payment method used by the patient (e.g. card, bank_transfer).
+        data_type: string
 
   - name: fct_leads
     description: "Hechos de leads con funnel completo lead -> cita -> pago."
+    config:
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns: [lead_id]
+        warn_unenforced: false
+      - type: foreign_key
+        columns: [specialty_id]
+        to: ref('dim_specialties')
+        to_columns: [specialty_id]
+        warn_unenforced: false
+      - type: foreign_key
+        columns: [country_id]
+        to: ref('dim_countries')
+        to_columns: [country_id]
+        warn_unenforced: false
     columns:
       - name: lead_id
+        description: Unique lead identifier.
+        data_type: string
         data_tests: [unique, not_null]
+      - name: patient_id
+        description: FK to dim_patients; NULL for anonymous leads.
+        data_type: string
       - name: specialty_id
+        description: FK to dim_specialties targeted by the lead.
+        data_type: string
         data_tests:
           - not_null
           - relationships:
@@ -151,19 +493,54 @@ models:
                 to: ref('dim_specialties')
                 field: specialty_id
       - name: country_id
+        description: FK to dim_countries where the lead originated.
+        data_type: string
         data_tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_countries')
                 field: country_id
+      - name: lead_date
+        description: Calendar date when the lead was created.
+        data_type: date
+      - name: lead_created_at
+        description: Full timestamp of lead creation.
+        data_type: timestamp
+      - name: lead_source
+        description: Acquisition source of the lead (e.g. organic, paid, referral).
+        data_type: string
       - name: lead_status
+        description: Current lead status — new, contacted, converted, lost.
+        data_type: string
         data_tests:
           - accepted_values:
               arguments:
                 values: ['new', 'contacted', 'converted', 'lost']
+      - name: appointment_id
+        description: FK to fct_appointments if lead converted to a booking; NULL otherwise.
+        data_type: string
+      - name: appointment_status
+        description: Status of the linked appointment; NULL if not converted.
+        data_type: string
+      - name: is_converted_to_appointment
+        description: True if the lead resulted in a booked appointment.
+        data_type: boolean
+      - name: is_converted_to_payment
+        description: True if the lead resulted in a completed payment.
+        data_type: boolean
+      - name: amount_cents
+        description: Revenue generated from this lead in cents; NULL if not converted.
+        data_type: int64
+      - name: amount_eur
+        description: Revenue generated from this lead in euros; NULL if not converted.
+        data_type: float64
+      - name: payment_status
+        description: Payment status for the converted lead; NULL if not converted.
+        data_type: string
       - name: days_lead_to_appointment
         description: Days from lead creation to first appointment. NULL if not converted.
+        data_type: int64
         data_tests:
           - dbt_utils.expression_is_true:
               arguments:
@@ -173,6 +550,7 @@ models:
                 severity: warn
       - name: days_appointment_to_payment
         description: Days from appointment to payment capture. NULL if not paid.
+        data_type: int64
         data_tests:
           - dbt_utils.expression_is_true:
               arguments:

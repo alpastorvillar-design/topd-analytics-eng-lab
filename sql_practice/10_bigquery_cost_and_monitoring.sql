@@ -10,37 +10,37 @@
 -- ── 1. Top 20 most expensive queries (last 7 days) ──────────
 -- Shows who ran what, how many bytes processed, and estimated
 -- cost at $6.25 per TB (on-demand pricing).
-SELECT
+select
     creation_time,
     user_email,
-    ROUND(total_bytes_processed / POW(10, 12), 4)   AS tb_processed,
-    ROUND(total_bytes_processed / POW(10, 12) * 6.25, 4) AS estimated_usd,
-    ROUND(total_slot_ms / 1000, 1)                  AS slot_seconds,
+    ROUND(total_bytes_processed / POW(10, 12), 4)   as tb_processed,
+    ROUND(total_bytes_processed / POW(10, 12) * 6.25, 4) as estimated_usd,
+    ROUND(total_slot_ms / 1000, 1)                  as slot_seconds,
     job_id,
-    SUBSTR(query, 1, 120)                            AS query_preview
-FROM `region-eu`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
-WHERE
-    creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
-    AND job_type = 'QUERY'
-    AND state = 'DONE'
-    AND error_result IS NULL
-ORDER BY total_bytes_processed DESC
-LIMIT 20;
+    SUBSTR(query, 1, 120)                            as query_preview
+from `region-eu`.information_schema.jobs_by_project
+where
+    creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), interval 7 day)
+    and job_type = 'QUERY'
+    and state = 'DONE'
+    and error_result is NULL
+order by total_bytes_processed desc
+limit 20;
 
 
 -- ── 2. Daily spend summary ───────────────────────────────────
-SELECT
-    DATE(creation_time)                              AS query_date,
-    COUNT(*)                                         AS query_count,
-    ROUND(SUM(total_bytes_processed) / POW(10, 12), 4) AS total_tb,
-    ROUND(SUM(total_bytes_processed) / POW(10, 12) * 6.25, 4) AS estimated_usd
-FROM `region-eu`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
-WHERE
-    creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 30 DAY)
-    AND job_type = 'QUERY'
-    AND state = 'DONE'
-GROUP BY query_date
-ORDER BY query_date DESC;
+select
+    DATE(creation_time)                              as query_date,
+    COUNT(*)                                         as query_count,
+    ROUND(SUM(total_bytes_processed) / POW(10, 12), 4) as total_tb,
+    ROUND(SUM(total_bytes_processed) / POW(10, 12) * 6.25, 4) as estimated_usd
+from `region-eu`.information_schema.jobs_by_project
+where
+    creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), interval 30 day)
+    and job_type = 'QUERY'
+    and state = 'DONE'
+group by query_date
+order by query_date desc;
 
 
 -- ── 3. Partition pruning effectiveness ──────────────────────
@@ -49,40 +49,40 @@ ORDER BY query_date DESC;
 -- Query B scans the full table (expensive)
 
 -- A: Partition-pruned (scans 1 month only)
-SELECT COUNT(*)
-FROM `topd-lab.dbt_marts.fct_appointments`
-WHERE appointment_date BETWEEN '2024-01-01' AND '2024-01-31';
+select COUNT(*)
+from `topd-lab.dbt_marts.fct_appointments`
+where appointment_date between '2024-01-01' and '2024-01-31';
 
 -- B: Full table scan (no partition filter — avoid in production)
-SELECT COUNT(*)
-FROM `topd-lab.dbt_marts.fct_appointments`
-WHERE status = 'completed';
+select COUNT(*)
+from `topd-lab.dbt_marts.fct_appointments`
+where status = 'completed';
 
 -- Compare "Bytes processed" in the query results panel.
 -- A should process ~1/36 of what B processes.
 
 
 -- ── 4. Table storage and row counts ─────────────────────────
-SELECT
+select
     table_id,
-    ROUND(size_bytes / POW(10, 6), 2)               AS size_mb,
+    ROUND(size_bytes / POW(10, 6), 2)               as size_mb,
     row_count,
-    DATE(TIMESTAMP_MILLIS(last_modified_time))       AS last_modified
-FROM `topd-lab.dbt_marts.__TABLES__`
-ORDER BY size_bytes DESC;
+    DATE(TIMESTAMP_MILLIS(last_modified_time))       as last_modified
+from `topd-lab.dbt_marts.__TABLES__`
+order by size_bytes desc;
 
 
 -- ── 5. Partition metadata for fct_appointments ──────────────
 -- Verifies partitioning is working: each row is one month partition.
-SELECT
+select
     table_name,
     partition_id,
     total_rows,
     total_logical_bytes,
     last_modified_time
-FROM `topd-lab.dbt_marts.INFORMATION_SCHEMA.PARTITIONS`
-WHERE table_name = 'fct_appointments'
-ORDER BY partition_id;
+from `topd-lab.dbt_marts.INFORMATION_SCHEMA.PARTITIONS`
+where table_name = 'fct_appointments'
+order by partition_id;
 
 
 -- ── 6. Dry-run cost estimate (bq CLI) ───────────────────────

@@ -16,7 +16,7 @@ Connect via **Tableau Desktop -> Connect -> Google BigQuery** (or use CSV extrac
 Use **BANs** (Big Ass Numbers) at the top:
 - Revenue MTD: `SUM([Daily Revenue Eur])` with date filter = current month
 - Completion Rate: `SUM([Completed Appointments]) / SUM([Total Appointments])`
-- Lead Conversion Rate: `SUM([Converted Leads]) / SUM([Total Leads])`
+- Lead Conversion Rate: `AVG([Lead Conversion Rate])` (campo pre-calculado en `agg_daily_business_kpis`, usa SAFE_DIVIDE internamente)
 
 ### Revenue Line Chart
 - Columns: `MONTH([Date])`
@@ -25,9 +25,10 @@ Use **BANs** (Big Ass Numbers) at the top:
 - Dual axis: add `SUM([Cumulative Revenue Eur])` as secondary axis (area mark)
 
 ### Appointments by Status (Stacked Bar)
-- Columns: `MONTH([Date])`
-- Rows: `SUM([Number of Records])`
-- Color: `[Status]`
+- Source: `mart_appointment_quality`
+- Columns: `MONTH([Month])`
+- Rows: `SUM([Completed])`, `SUM([Cancelled])`, `SUM([No Show])`, `SUM([Scheduled])` as Measure Values
+- Color: Measure Names
 
 ---
 

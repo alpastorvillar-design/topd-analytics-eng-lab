@@ -36,9 +36,9 @@ Formato: número grande + variación % vs mes anterior (condicional: verde si me
 
 ### Gráfico de barras: Citas por canal (últimos 90 días)
 - Eje X: canal (web, app, phone, clinic)
-- Eje Y: `completed_appointments`
+- Eje Y: `completed` (columna de `mart_appointment_quality`)
 - Color: azul corporate
-- Fuente: `mart_appointment_quality` agrupado
+- Fuente: `mart_appointment_quality` agrupado por `channel`
 
 ### Tabla: Top 5 especialidades por revenue
 - Columnas: specialty_name | total_revenue_eur | completion_rate | specialty_revenue_rank
@@ -55,10 +55,10 @@ Formato: número grande + variación % vs mes anterior (condicional: verde si me
 - Tooltip: país | revenue | citas | completion_rate
 - Fuente: `agg_monthly_country_kpis`
 
-### Gráfico de barras apiladas: Completion rate por país
+### Gráfico de barras apiladas: Appointment status por país
 - Eje X: country_name
 - Barras: completed / cancelled / no_show / scheduled
-- Fuente: `agg_monthly_country_kpis`
+- Fuente: `mart_appointment_quality` agregado por `country_id` y unido a `dim_countries`
 
 ### Filtro de slicers
 - Año/Mes (jerarquía de fecha)
@@ -95,8 +95,8 @@ CALCULATE(
 
 Revenue MoM % = 
 DIVIDE(
-    [Revenue MTD] - [Revenue MTD Prev Month],
-    [Revenue MTD Prev Month]
+    [Revenue MTD] - [Revenue Prev Month],
+    [Revenue Prev Month]
 )
 ```
 

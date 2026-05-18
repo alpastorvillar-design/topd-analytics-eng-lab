@@ -3,105 +3,105 @@
 
 
 -- 1. INNER JOIN: citas con nombre de paciente y médico
-SELECT
+select
     a.appointment_id,
     a.appointment_start_at,
     a.status,
-    p.full_name   AS patient_name,
-    d.full_name   AS doctor_name
-FROM `topd-lab.dbt_marts.fct_appointments`    AS a
-INNER JOIN `topd-lab.dbt_marts.dim_patients`  AS p USING (patient_id)
-INNER JOIN `topd-lab.dbt_marts.dim_doctors`   AS d USING (doctor_id)
-WHERE a.appointment_date >= '2023-01-01'
-LIMIT 100;
+    p.full_name   as patient_name,
+    d.full_name   as doctor_name
+from `topd-lab.dbt_marts.fct_appointments`    as a
+inner join `topd-lab.dbt_marts.dim_patients`  as p using (patient_id)
+inner join `topd-lab.dbt_marts.dim_doctors`   as d using (doctor_id)
+where a.appointment_date >= '2023-01-01'
+limit 100;
 
 
 -- 2. LEFT JOIN: médicos con nº de citas completadas (incluye médicos con 0)
 -- La condición de status va en ON, no en WHERE.
 -- WHERE a.status = 'completed' convertiría el LEFT en INNER (filtraría NULLs).
-SELECT
+select
     d.doctor_id,
     d.full_name,
     d.specialty_id,
-    COUNT(a.appointment_id)  AS completed_appointments
-FROM `topd-lab.dbt_marts.dim_doctors` AS d
-LEFT JOIN `topd-lab.dbt_marts.fct_appointments` AS a
-    ON  d.doctor_id = a.doctor_id
-    AND a.status    = 'completed'
-GROUP BY d.doctor_id, d.full_name, d.specialty_id
-ORDER BY completed_appointments DESC;
+    COUNT(a.appointment_id)  as completed_appointments
+from `topd-lab.dbt_marts.dim_doctors` as d
+left join `topd-lab.dbt_marts.fct_appointments` as a
+    on  d.doctor_id = a.doctor_id
+    and a.status    = 'completed'
+group by d.doctor_id, d.full_name, d.specialty_id
+order by completed_appointments desc;
 
 
 -- 3. Anti-join: pagos sin cita correspondiente (detección de huérfanos)
-SELECT
+select
     pay.payment_id,
     pay.appointment_id,
     pay.amount_cents
-FROM `topd-lab.dbt_marts.fct_payments` AS pay
-LEFT JOIN `topd-lab.dbt_marts.fct_appointments` AS a
-    USING (appointment_id)
-WHERE a.appointment_id IS NULL;
+from `topd-lab.dbt_marts.fct_payments` as pay
+left join `topd-lab.dbt_marts.fct_appointments` as a
+    using (appointment_id)
+where a.appointment_id is NULL;
 
 
 -- 4. FULL OUTER JOIN: unir métricas de appointments y payments por día
 -- Hay días con citas pero sin pagos (no_show/cancelled) y viceversa.
-WITH daily_appts AS (
-    SELECT
-        appointment_date               AS date,
-        COUNT(*)                       AS total_appointments
-    FROM `topd-lab.dbt_marts.fct_appointments`
-    GROUP BY appointment_date
+with daily_appts as (
+    select
+        appointment_date               as date,
+        COUNT(*)                       as total_appointments
+    from `topd-lab.dbt_marts.fct_appointments`
+    group by appointment_date
 ),
-daily_payments AS (
-    SELECT
-        payment_date                   AS date,
-        SUM(amount_eur)                AS total_revenue_eur
-    FROM `topd-lab.dbt_marts.fct_payments`
-    WHERE payment_status = 'paid'
-    GROUP BY payment_date
+daily_payments as (
+    select
+        payment_date                   as date,
+        SUM(amount_eur)                as total_revenue_eur
+    from `topd-lab.dbt_marts.fct_payments`
+    where payment_status = 'paid'
+    group by payment_date
 )
-SELECT
-    COALESCE(a.date, p.date)           AS date,
-    COALESCE(a.total_appointments, 0)  AS total_appointments,
-    COALESCE(p.total_revenue_eur, 0)   AS total_revenue_eur
-FROM daily_appts    AS a
-FULL OUTER JOIN daily_payments AS p USING (date)
-ORDER BY date;
+select
+    COALESCE(a.date, p.date)           as date,
+    COALESCE(a.total_appointments, 0)  as total_appointments,
+    COALESCE(p.total_revenue_eur, 0)   as total_revenue_eur
+from daily_appts    as a
+full outer join daily_payments as p using (date)
+order by date;
 
 
 -- 5. SELF JOIN: pacientes que visitaron al mismo médico más de una vez
-SELECT
+select
     a1.patient_id,
     a1.doctor_id,
-    a1.appointment_id       AS first_visit,
-    a2.appointment_id       AS repeat_visit,
-    a1.appointment_start_at AS first_date,
-    a2.appointment_start_at AS repeat_date
-FROM `topd-lab.dbt_marts.fct_appointments` AS a1
-JOIN `topd-lab.dbt_marts.fct_appointments` AS a2
-    ON  a1.patient_id = a2.patient_id
-    AND a1.doctor_id  = a2.doctor_id
-    AND a1.appointment_start_at < a2.appointment_start_at
-WHERE a1.status = 'completed'
-  AND a2.status = 'completed'
-ORDER BY a1.patient_id, first_date;
+    a1.appointment_id       as first_visit,
+    a2.appointment_id       as repeat_visit,
+    a1.appointment_start_at as first_date,
+    a2.appointment_start_at as repeat_date
+from `topd-lab.dbt_marts.fct_appointments` as a1
+join `topd-lab.dbt_marts.fct_appointments` as a2
+    on  a1.patient_id = a2.patient_id
+    and a1.doctor_id  = a2.doctor_id
+    and a1.appointment_start_at < a2.appointment_start_at
+where a1.status = 'completed'
+  and a2.status = 'completed'
+order by a1.patient_id, first_date;
 
 
 -- 6. JOIN con enriquecimiento dimensional: revenue por especialidad y país
-SELECT
+select
     s.specialty_name,
     c.country_name,
-    COUNT(DISTINCT a.patient_id)        AS unique_patients,
-    COUNT(a.appointment_id)             AS total_appointments,
-    ROUND(SUM(p.amount_eur), 2)         AS total_revenue_eur,
+    COUNT(distinct a.patient_id)        as unique_patients,
+    COUNT(a.appointment_id)             as total_appointments,
+    ROUND(SUM(p.amount_eur), 2)         as total_revenue_eur,
     SAFE_DIVIDE(
         SUM(p.amount_eur),
-        COUNT(DISTINCT a.patient_id)
-    )                                   AS revenue_per_patient
-FROM `topd-lab.dbt_marts.fct_appointments`   AS a
-JOIN `topd-lab.dbt_marts.fct_payments`       AS p   USING (appointment_id)
-JOIN `topd-lab.dbt_marts.dim_specialties`    AS s   USING (specialty_id)
-JOIN `topd-lab.dbt_marts.dim_countries`      AS c   ON c.country_id = a.country_id
-WHERE p.payment_status = 'paid'
-GROUP BY s.specialty_name, c.country_name
-ORDER BY total_revenue_eur DESC;
+        COUNT(distinct a.patient_id)
+    )                                   as revenue_per_patient
+from `topd-lab.dbt_marts.fct_appointments`   as a
+join `topd-lab.dbt_marts.fct_payments`       as p   using (appointment_id)
+join `topd-lab.dbt_marts.dim_specialties`    as s   using (specialty_id)
+join `topd-lab.dbt_marts.dim_countries`      as c   on c.country_id = a.country_id
+where p.payment_status = 'paid'
+group by s.specialty_name, c.country_name
+order by total_revenue_eur desc;

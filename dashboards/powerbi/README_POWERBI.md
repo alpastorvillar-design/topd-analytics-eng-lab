@@ -8,7 +8,7 @@
 4. Select tables: `agg_daily_business_kpis`, `agg_monthly_country_kpis`,
    `agg_specialty_performance`, `mart_patient_retention`, `mart_appointment_quality`
 
-**Authentication**: Google account or service account key (for scheduled refresh via gateway)
+**Authentication**: Google account or service account. Configure scheduled refresh credentials in Power BI Service.
 
 ## Import vs DirectQuery
 
@@ -34,4 +34,4 @@ For a live production environment, DirectQuery + scheduled refresh is preferred.
 
 1. Power BI Desktop -> **Publish** -> Workspace
 2. **Schedule refresh**: Settings -> Datasets -> Scheduled refresh -> Daily 06:00 UTC
-3. For BigQuery scheduled refresh you need a **Data Gateway** or use **Service Principal** auth
+3. Configure dataset credentials and scheduled refresh in Power BI Service. A gateway is only needed for on-premise/private network sources, not for a direct cloud BigQuery connection.

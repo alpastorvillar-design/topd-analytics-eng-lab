@@ -28,8 +28,8 @@ Use joins inside Tableau to replicate the mart structure.
 | Workbook | Primary Table | Supporting Tables |
 |----------|--------------|-------------------|
 | Executive Overview | `agg_daily_business_kpis` | `dim_countries` |
-| Country Drilldown | `agg_monthly_country_kpis` | `dim_countries`, `dim_specialties` |
-| Cohort Retention | `mart_patient_retention` | `dim_countries` |
+| Country Drilldown | `agg_monthly_country_kpis` | `dim_countries` |
+| Cohort Retention | `mart_patient_retention` | none |
 | Doctor Performance | `mart_doctor_supply_demand` | `dim_doctors`, `dim_specialties` |
 
 ---
@@ -56,13 +56,13 @@ Recommendation: use **Extract** for the retention cohort (large join), **Live** 
 
 ---
 
-## Filters to Add on Every Dashboard
+## Filters to Add
 
-- Date range (using `appointment_date`)
-- Country (using `country_id` -> `dim_countries.country_name`)
-- Specialty (using `specialty_id` -> `dim_specialties.specialty_name`)
+- Date range using the relevant date field: `date`, `month`, or `appointment_date`
+- Country where the table has `country_id`
+- Specialty where the table has `specialty_id`
 
-Set these as Global Filters so they cascade across all sheets in the workbook.
+Set filters as global only when the underlying worksheets share the same field or relationship.
 
 ---
 

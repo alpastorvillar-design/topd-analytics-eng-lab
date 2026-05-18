@@ -7,23 +7,23 @@ models:
       Measures what % of patients who first booked in a given month returned in subsequent months.
     columns:
       - name: cohort_month
-        description: Month of patient's first completed appointment (cohort definition)
+        description: Month of patient's first completed appointment (cohort definition).
         data_tests:
           - not_null
       - name: months_since_acquisition
-        description: Months elapsed since cohort_month (0 = acquisition month)
+        description: Months elapsed since cohort_month (0 = acquisition month).
         data_tests:
           - not_null
       - name: cohort_size
-        description: Total number of patients in this cohort
+        description: Total number of patients in this cohort.
         data_tests:
           - not_null
       - name: retained_patients
-        description: Patients from the cohort who had a completed appointment this month
+        description: Patients from the cohort who had a completed appointment in this month.
         data_tests:
           - not_null
       - name: retention_rate
-        description: retained_patients / cohort_size (NULL-safe)
+        description: retained_patients / cohort_size (SAFE_DIVIDE, NULL-safe).
 
   - name: mart_doctor_supply_demand
     description: >
@@ -31,20 +31,35 @@ models:
       under-supplied specialties for marketplace management.
     columns:
       - name: specialty_id
+        description: FK to dim_specialties.
         data_tests:
           - not_null
       - name: country_id
+        description: FK to dim_countries.
         data_tests:
           - not_null
       - name: month
+        description: Calendar month (first day of the month); partition dimension.
         data_tests:
           - not_null
       - name: total_appointments
-        description: Total appointments booked in the period
+        description: Total appointments booked in the period.
+      - name: completed_appointments
+        description: Appointments with status 'completed' in the period.
+      - name: no_show_appointments
+        description: Appointments where the patient did not attend in the period.
       - name: active_doctors_with_appointments
-        description: Distinct doctors who had at least one appointment
+        description: Distinct doctors who had at least one appointment in the period.
+      - name: total_active_doctors
+        description: Total active doctors for this specialty and country (not limited to the month).
+      - name: avg_doctor_rating
+        description: Average doctor rating across all active doctors for this specialty and country.
+      - name: avg_years_experience
+        description: Average years of professional experience across active doctors.
       - name: appointments_per_doctor
-        description: Demand/supply ratio - above 1 means more appointments than active doctors
+        description: Demand/supply ratio — total_appointments / total_active_doctors (SAFE_DIVIDE). Values above 1 indicate more demand than active doctors.
+      - name: no_show_rate
+        description: Proportion of appointments where the patient did not attend (SAFE_DIVIDE).
 
   - name: mart_appointment_quality
     description: >
@@ -52,23 +67,39 @@ models:
       Used to identify where no-shows and cancellations concentrate.
     columns:
       - name: month
+        description: Calendar month (first day of the month); partition dimension.
         data_tests:
           - not_null
       - name: channel
+        description: Booking channel — web, app, phone, clinic.
         data_tests:
           - not_null
           - accepted_values:
               arguments:
                 values: ['web', 'app', 'phone', 'clinic']
       - name: specialty_id
+        description: FK to dim_specialties.
         data_tests:
           - not_null
       - name: country_id
+        description: FK to dim_countries.
         data_tests:
           - not_null
+      - name: total_appointments
+        description: Total appointments for this channel/specialty/country/month combination.
+      - name: completed
+        description: Count of appointments with status 'completed'.
+      - name: cancelled
+        description: Count of appointments with status 'cancelled'.
+      - name: no_show
+        description: Count of appointments where the patient did not attend.
+      - name: scheduled
+        description: Count of appointments still in 'scheduled' status (future or pending).
       - name: completion_rate
-        description: completed / total appointments
+        description: completed / total_appointments (SAFE_DIVIDE).
       - name: no_show_rate
-        description: no_show / total appointments
+        description: no_show / total_appointments (SAFE_DIVIDE).
       - name: cancellation_rate
-        description: cancelled / total appointments
+        description: cancelled / total_appointments (SAFE_DIVIDE).
+      - name: avg_doctor_rating
+        description: Average doctor rating for appointments in this group.

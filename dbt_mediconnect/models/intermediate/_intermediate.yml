@@ -5,22 +5,162 @@ models:
     description: "Citas enriquecidas con contexto de médico, paciente y pago. Incluye window functions para secuencia y días entre citas."
     columns:
       - name: appointment_id
+        description: Unique appointment identifier.
         data_tests: [unique, not_null]
+      - name: patient_id
+        description: FK to stg_patients.
+      - name: doctor_id
+        description: FK to stg_doctors.
+      - name: appointment_created_at
+        description: Timestamp when the appointment was booked.
+      - name: appointment_start_at
+        description: Scheduled start timestamp of the appointment.
+      - name: updated_at
+        description: Last modification timestamp; drives the incremental merge in fct_appointments.
+      - name: status
+        description: Appointment outcome — completed, cancelled, no_show, scheduled.
+      - name: channel
+        description: Booking channel — web, app, phone, clinic.
+      - name: cancellation_reason
+        description: Reason for cancellation; NULL for non-cancelled appointments.
+      - name: is_first_appointment
+        description: True if this is the patient's first appointment on the platform.
+      - name: source_lead_id
+        description: ID of the originating lead if the appointment came from a lead; NULL otherwise.
+      - name: specialty_id
+        description: FK to dim_specialties; denormalised from the doctor record.
+      - name: country_id
+        description: FK to dim_countries; denormalised from the doctor record.
+      - name: doctor_rating
+        description: Doctor's aggregate rating at the time of the appointment.
+      - name: patient_age_at_appointment
+        description: Patient age in years at the time of the appointment, calculated via DATE_DIFF on birth_date.
+      - name: amount_cents
+        description: Payment amount in cents from the linked payment record; NULL if no payment exists.
+      - name: payment_status
+        description: Payment status from the linked payment; NULL if no payment exists.
+      - name: is_missing_payment
+        description: True if the appointment is completed but has no associated payment record.
+      - name: patient_appointment_sequence
+        description: Sequential visit number for this patient ordered by appointment_start_at (1 = first ever). Computed with ROW_NUMBER OVER (PARTITION BY patient_id).
+      - name: days_since_last_appointment
+        description: Days elapsed since the patient's previous appointment, calculated with LAG + DATE_DIFF. NULL for the patient's first visit.
 
   - name: int_patient_lifetime_metrics
     description: "Métricas de ciclo de vida por paciente: volumen, revenue, ratios y cohort_month."
     columns:
       - name: patient_id
+        description: Unique patient identifier.
         data_tests: [unique, not_null]
+      - name: acquisition_channel
+        description: Channel through which the patient was acquired.
+      - name: country_id
+        description: Patient country of residence; FK to dim_countries.
+      - name: cohort_month
+        description: First day of the month of the patient's first completed appointment; used as retention cohort key.
+      - name: total_appointments
+        description: Lifetime count of appointments across all statuses.
+      - name: completed_appointments
+        description: Lifetime count of appointments with status 'completed'.
+      - name: cancelled_appointments
+        description: Lifetime count of appointments with status 'cancelled'.
+      - name: no_show_appointments
+        description: Lifetime count of appointments where the patient did not attend.
+      - name: first_appointment_date
+        description: Date of the patient's first appointment (any status).
+      - name: last_appointment_date
+        description: Date of the patient's most recent appointment (any status).
+      - name: first_completed_appointment_date
+        description: Date of the patient's first completed appointment; used to derive cohort_month.
+      - name: days_as_patient
+        description: Days between first and last appointment dates.
+      - name: total_revenue_cents
+        description: Lifetime revenue from paid appointments for this patient, in cents.
+      - name: no_show_rate
+        description: Proportion of appointments where the patient did not attend (SAFE_DIVIDE).
+      - name: cancellation_rate
+        description: Proportion of appointments cancelled by the patient (SAFE_DIVIDE).
+      - name: distinct_specialties_consulted
+        description: Number of distinct medical specialties the patient has consulted.
 
   - name: int_doctor_performance
     description: "Métricas de rendimiento por médico con ranking dentro de especialidad."
     columns:
       - name: doctor_id
+        description: Unique doctor identifier.
         data_tests: [unique, not_null]
+      - name: specialty_id
+        description: FK to dim_specialties.
+      - name: country_id
+        description: FK to dim_countries.
+      - name: rating
+        description: Aggregate doctor rating on a 0–5 scale.
+      - name: years_experience
+        description: Years of professional experience.
+      - name: accepts_online_booking
+        description: Whether the doctor accepts online bookings.
+      - name: is_active
+        description: Whether the doctor is currently active on the platform.
+      - name: total_appointments
+        description: Lifetime appointment count across all statuses.
+      - name: completed_appointments
+        description: Lifetime count of completed appointments.
+      - name: cancelled_appointments
+        description: Lifetime count of cancelled appointments.
+      - name: no_show_appointments
+        description: Lifetime count of no-show appointments.
+      - name: no_show_rate
+        description: Proportion of appointments where the patient did not attend (SAFE_DIVIDE).
+      - name: completion_rate
+        description: Proportion of appointments with status 'completed' (SAFE_DIVIDE).
+      - name: total_revenue_cents
+        description: Lifetime revenue generated by this doctor from paid appointments, in cents.
+      - name: distinct_patients
+        description: Number of unique patients treated by this doctor.
+      - name: active_months
+        description: Number of distinct calendar months in which the doctor had at least one appointment.
+      - name: first_appointment_date
+        description: Date of the doctor's first appointment on the platform.
+      - name: last_appointment_date
+        description: Date of the doctor's most recent appointment.
+      - name: revenue_rank_in_specialty
+        description: Revenue rank among doctors in the same specialty (1 = highest earner). Ties share the same rank (RANK function).
 
   - name: int_lead_to_appointment_funnel
     description: "Funnel lead -> cita -> pago con flags de conversión y velocidad en días."
     columns:
       - name: lead_id
+        description: Unique lead identifier.
         data_tests: [unique, not_null]
+      - name: patient_id
+        description: FK to stg_patients; NULL for anonymous leads.
+      - name: specialty_id
+        description: Medical specialty targeted by the lead; FK to dim_specialties.
+      - name: country_id
+        description: Country where the lead originated; FK to dim_countries.
+      - name: lead_source
+        description: Acquisition source of the lead (e.g. organic, sem, referral).
+      - name: lead_status
+        description: Current lead status — new, contacted, converted, lost.
+      - name: lead_created_at
+        description: Full timestamp of lead creation.
+      - name: appointment_id
+        description: FK to stg_appointments if the lead converted to a booking; NULL otherwise.
+      - name: appointment_created_at
+        description: Timestamp when the linked appointment was booked; NULL if not converted.
+      - name: appointment_status
+        description: Status of the linked appointment; NULL if not converted.
+      - name: payment_created_at
+        description: Timestamp of the payment capture for the linked appointment; NULL if not paid.
+      - name: amount_cents
+        description: Revenue generated from this lead in cents; NULL if no payment collected.
+      - name: payment_status
+        description: Payment status for the linked appointment; NULL if not converted.
+      - name: is_converted_to_appointment
+        description: True if the lead resulted in a booked appointment.
+      - name: is_converted_to_payment
+        description: True if the lead resulted in a completed payment.
+      - name: days_lead_to_appointment
+        description: Days from lead creation to the appointment start date (DATE_DIFF). NULL if not converted.
+      - name: days_appointment_to_payment
+        description: Days from appointment creation to payment capture (DATE_DIFF). NULL if not paid.
