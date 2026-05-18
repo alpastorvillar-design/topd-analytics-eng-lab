@@ -53,7 +53,7 @@ The `mart_patient_retention` table has one row per `cohort_month × months_since
 
 ### Setup
 - Rows: `[Cohort Month]` (discrete, formatted as YYYY-MM)
-- Columns: `[Months Since Acquisition]` (discrete: 0,1,2,3,4,5)
+- Columns: `[Months Since Acquisition]` (discrete: 1,2,3,4,5,6)
 - Mark: Square
 - Color: `SUM([Retention Rate])` - diverging palette (red -> green)
 - Label: `SUM([Retention Rate])` formatted as percentage

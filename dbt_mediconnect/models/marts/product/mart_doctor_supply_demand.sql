@@ -1,6 +1,6 @@
 -- MART PRODUCT: mart_doctor_supply_demand
--- Oferta (mÃ©dicos activos) vs demanda (citas) por especialidad, paÃ­s y mes.
--- Detecta desequilibrios: especialidades con mÃ¡s demanda que mÃ©dicos disponibles.
+-- Oferta (médicos activos) vs demanda (citas) por especialidad, país y mes.
+-- Detecta desequilibrios: especialidades con más demanda que médicos disponibles.
 
 with appointments as (
     select
@@ -39,7 +39,7 @@ final as (
         d.avg_doctor_rating,
         d.avg_years_experience,
 
-        -- Ratio demanda/oferta: >1 significa mÃ¡s citas que mÃ©dicos activos ese mes
+        -- Ratio demanda/oferta: >1 significa más citas que médicos activos ese mes
         safe_divide(
             a.total_appointments,
             d.total_active_doctors

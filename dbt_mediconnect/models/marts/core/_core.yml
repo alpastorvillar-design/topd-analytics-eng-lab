@@ -162,3 +162,20 @@ models:
           - accepted_values:
               arguments:
                 values: ['new', 'contacted', 'converted', 'lost']
+      - name: days_lead_to_appointment
+        description: Days from lead creation to first appointment. NULL if not converted.
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
+              config:
+                where: "days_lead_to_appointment is not null"
+                severity: warn
+      - name: days_appointment_to_payment
+        description: Days from appointment to payment capture. NULL if not paid.
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
+              config:
+                where: "days_appointment_to_payment is not null"

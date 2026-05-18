@@ -1,8 +1,11 @@
 # MediConnect Analytics Lab
 
-End-to-end Analytics Engineering project built on a synthetic eHealth marketplace dataset.
-Covers the full pipeline: data generation in Python, raw ingestion into BigQuery,
-multi-layer dbt transformations and BI-ready marts for dashboarding.
+End-to-end Analytics Engineering project simulating the data stack of an eHealth marketplace.
+Covers the full pipeline: synthetic data generation in Python, raw ingestion into BigQuery,
+multi-layer dbt transformations, and BI-ready marts consumed by Looker Studio and a standalone
+HTML dashboard. Tableau and Power BI specs are included as implementation references.
+
+> **Live dashboard →** [MediConnect Analytics on Looker Studio](https://lookerstudio.google.com/reporting/bb506bc1-1e86-4688-afa9-4ff611f04085)
 
 ---
 
@@ -11,9 +14,41 @@ multi-layer dbt transformations and BI-ready marts for dashboarding.
 | Layer | Tool |
 |---|---|
 | Data generation | Python 3.12 + Faker |
-| Data warehouse | Google BigQuery |
-| Transformations | dbt (BigQuery adapter) |
-| BI | Power BI, Tableau, Metabase |
+| Data warehouse | Google BigQuery (EU, partitioned + clustered) |
+| Transformations | dbt Core 1.11 (BigQuery adapter) |
+| BI | Looker Studio · standalone HTML (Tableau & Power BI specs) |
+| CI | GitHub Actions (sqlfluff + dbt parse) |
+
+---
+
+## Dashboards
+
+All dashboards connect exclusively to `dbt_marts` in BigQuery — no raw data, no ad-hoc queries.
+
+### Looker Studio
+
+| Page | Question answered |
+|---|---|
+| Executive Overview | Is the business growing? |
+| Country Performance | Which markets perform best? |
+| Specialty Performance | Which specialties generate most value? |
+| Operations Quality | Where is the operational friction? |
+
+![Executive Overview](dashboards/looker_studio/screenshots/01_executive_overview.png)
+![Country Performance](dashboards/looker_studio/screenshots/02_country_performance.png)
+![Specialty Performance](dashboards/looker_studio/screenshots/03_specialty_performance.png)
+![Operations Quality](dashboards/looker_studio/screenshots/04_operations_quality.png)
+
+### Standalone HTML Dashboard
+
+`dashboards/mediconnect_dashboard.html` is generated from BigQuery data via
+`scripts/generate_html_dashboard.py`. Opens in any browser, no login required. Includes
+the cohort retention heatmap (36 cohorts × 36 months).
+
+### Tableau & Power BI
+
+Implementation specs, DAX measures, and calculated fields are in `dashboards/tableau/`
+and `dashboards/powerbi/` as reference documentation.
 
 ---
 
@@ -27,9 +62,9 @@ mediconnect-analytics-lab/
 │   ├── load_to_bigquery.py
 │   ├── validate_source_data.py
 │   └── export_dashboard_extracts.py
-├── sql_practice/                   # 00..09: smoke test, joins, CTEs,
+├── sql_practice/                   # 00..10: smoke test, joins, CTEs,
 │                                   # windows, BQ-specific, DQ, advanced,
-│                                   # KPIs, patterns, optimisation
+│                                   # KPIs, patterns, optimisation, cost
 ├── dbt_mediconnect/
 │   ├── models/
 │   │   ├── staging/                # Views, 1:1 with raw sources
@@ -44,9 +79,9 @@ mediconnect-analytics-lab/
 │   ├── seeds/
 │   └── analyses/
 ├── dashboards/
-│   ├── powerbi/
-│   ├── tableau/
-│   └── metabase/
+│   ├── looker_studio/              # Screenshots + specs
+│   ├── powerbi/                    # DAX measures + specs
+│   └── tableau/                    # Calculated fields + specs
 ├── .github/workflows/              # dbt parse + sqlfluff lint on PRs
 └── .env.example
 ```
@@ -68,7 +103,11 @@ dim_patients    ─┘             │
                                └─> fct_leads
 ```
 
-**Synthetic data volume** (3 years, 2022-2024):
+**dbt lineage** (sources → staging → intermediate → marts):
+
+![dbt DAG](assets/dbt_dag.png)
+
+**Synthetic data volume** (3 years, Jan 2022 – Dec 2024):
 
 | Table | Rows |
 |---|---|
@@ -166,14 +205,22 @@ is updated in place.
 
 ---
 
-## Cost Control
+## BigQuery Performance Decisions
 
-- Staging as views, no storage cost, always fresh.
-- `is_dev` var (false by default) limits fact tables to the last 90 days of the
-  data when enabled. Anchored to MAX(date) of the dataset, not CURRENT_DATE().
-- Partitioning on all fact tables by date column.
-- Clustering on high-cardinality filter columns.
-- `SELECT col` over `SELECT *` wherever possible.
+| Decision | Implementation | Impact |
+|---|---|---|
+| Staging as views | `materialized='view'` in dbt | Zero storage cost, always fresh |
+| Fact table partitioning | `fct_appointments` → `appointment_date` (MONTH) | Queries filtered by date scan only relevant partitions |
+| Fact table clustering | `[country_id, specialty_id, status]` | Skips irrelevant blocks for high-cardinality filters |
+| Dev variable | `is_dev: true` limits facts to last 90 days of data | Avoids full-table scans during local development |
+| Explicit columns in CTEs | Staging and marts define columns explicitly in CTEs; no `SELECT *` from raw tables in marts | Prevents over-reading when schema evolves |
+
+`fct_appointments` partition pruning example — a single-month filter scans roughly 1/36th of the
+table compared to a full scan, an estimated ~97% cost reduction over the 3-year dataset
+(verify with dry-run: `sql_practice/10_bigquery_cost_and_monitoring.sql` section 6).
+
+Cost monitoring queries: `sql_practice/10_bigquery_cost_and_monitoring.sql`
+covers `INFORMATION_SCHEMA.JOBS_BY_PROJECT`, daily spend, partition verification and dry-run estimation.
 
 ---
 

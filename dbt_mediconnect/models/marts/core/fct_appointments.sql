@@ -4,7 +4,7 @@
 --
 -- Materialization: incremental con estrategia 'merge'.
 --   - Primer run: materializa la tabla entera.
---   - Runs siguientes: solo procesa filas con updated_at posterior al mÃ¡ximo
+--   - Runs siguientes: solo procesa filas con updated_at posterior al máximo
 --     ya cargado, y hace upsert por appointment_id (las citas pueden cambiar
 --     de status: scheduled -> completed -> cancelled).
 --   - Para forzar reproceso completo: dbt run --select fct_appointments --full-refresh
@@ -49,7 +49,7 @@ filtered as (
 {% endif %}
 
 {% if is_incremental() %}
--- Solo procesa filas modificadas desde el Ãºltimo run.
+-- Solo procesa filas modificadas desde el último run.
 -- {{ this }} se resuelve a la tabla destino actual.
 incremental_filter as (
     select * from filtered

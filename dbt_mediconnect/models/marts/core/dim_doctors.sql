@@ -1,5 +1,5 @@
 -- MART CORE: dim_doctors
--- DimensiÃ³n de mÃ©dicos con mÃ©tricas de rendimiento pre-calculadas.
+-- Dimensión de médicos con métricas de rendimiento pre-calculadas.
 
 with doctors as (
     select * from {{ ref('stg_doctors') }}
@@ -22,7 +22,7 @@ final as (
         d.years_experience,
         d.accepts_online_booking,
 
-        -- MÃ©tricas de rendimiento
+        -- Métricas de rendimiento
         coalesce(p.total_appointments, 0)               as total_appointments,
         coalesce(p.completed_appointments, 0)           as completed_appointments,
         coalesce(p.total_revenue_cents, 0)              as total_revenue_cents,

@@ -15,6 +15,7 @@ All files are runnable directly in the BigQuery console.
 | `07_kpis_and_metrics.sql` | Revenue MoM/YoY/MTD/YTD, LTV, conversion funnel, cohort retention, supply/demand |
 | `08_advanced_patterns.sql` | PIVOT/UNPIVOT, ARRAY_AGG, STRUCT, APPROX functions, recursive CTEs, STRING_AGG |
 | `09_query_optimization.sql` | Partition pruning, clustering, SELECT *, correlated subqueries, materialisation strategy |
+| `10_bigquery_cost_and_monitoring.sql` | INFORMATION_SCHEMA jobs, daily spend, partition pruning comparison, dry-run estimation |
 
 ## Dataset structure
 

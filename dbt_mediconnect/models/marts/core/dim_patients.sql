@@ -1,14 +1,14 @@
 -- MART CORE: dim_patients
 --
--- DimensiÃ³n de pacientes. Una fila por paciente con atributos descriptivos
--- y mÃ©tricas de ciclo de vida pre-calculadas.
+-- Dimensión de pacientes. Una fila por paciente con atributos descriptivos
+-- y métricas de ciclo de vida pre-calculadas.
 --
 -- En un modelo dimensional (star schema):
--- - Las DIMENSIONES describen el QUIÃ‰N, QUÃ‰, DÃ“NDE, CUÃNDO
--- - Los HECHOS (facts) contienen las medidas numÃ©ricas y FK a dimensiones
+-- - Las DIMENSIONES describen el QUIÉN, QUÉ, DÓNDE, CUÁNDO
+-- - Los HECHOS (facts) contienen las medidas numéricas y FK a dimensiones
 --
--- dim_patients es el "QuiÃ©n" del anÃ¡lisis: describe al paciente.
--- fct_appointments usarÃ¡ patient_id como foreign key a esta dimensiÃ³n.
+-- dim_patients es el "Quién" del análisis: describe al paciente.
+-- fct_appointments usará patient_id como foreign key a esta dimensión.
 
 with patients as (
     select * from {{ ref('stg_patients') }}
@@ -31,7 +31,7 @@ final as (
         p.acquisition_channel,
         p.is_active,
 
-        -- MÃ©tricas de ciclo de vida
+        -- Métricas de ciclo de vida
         coalesce(m.total_appointments, 0)               as total_appointments,
         coalesce(m.completed_appointments, 0)           as completed_appointments,
         coalesce(m.total_revenue_cents, 0)              as total_revenue_cents,

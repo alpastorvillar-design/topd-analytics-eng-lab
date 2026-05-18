@@ -1,0 +1,37 @@
+version: 2
+
+exposures:
+
+  - name: looker_studio_dashboard
+    label: MediConnect Analytics — Looker Studio
+    type: dashboard
+    maturity: high
+    url: https://lookerstudio.google.com/reporting/bb506bc1-1e86-4688-afa9-4ff611f04085
+    description: >
+      Four-page executive dashboard covering business growth, country performance,
+      specialty ranking and operational quality. Connects exclusively to dbt_marts
+      in BigQuery — no raw data, no ad-hoc queries.
+    owner:
+      name: Analytics Engineering
+    depends_on:
+      - ref('agg_daily_business_kpis')
+      - ref('agg_monthly_country_kpis')
+      - ref('agg_specialty_performance')
+      - ref('mart_appointment_quality')
+
+  - name: html_dashboard
+    label: MediConnect Analytics — Standalone HTML
+    type: dashboard
+    maturity: medium
+    url: https://github.com/alpastorvillar-design/topd-analytics-eng-lab/blob/main/dashboards/mediconnect_dashboard.html
+    description: >
+      Generated standalone HTML dashboard built from BigQuery via
+      scripts/generate_html_dashboard.py. Includes cohort retention heatmap,
+      monthly revenue trend and specialty performance table.
+      No login required — opens in any browser.
+    owner:
+      name: Analytics Engineering
+    depends_on:
+      - ref('agg_daily_business_kpis')
+      - ref('mart_patient_retention')
+      - ref('agg_specialty_performance')

@@ -1,7 +1,7 @@
 -- STAGING: stg_appointments
 --
 -- Nota sobre NULLIF: cancellation_reason solo existe si status = 'cancelled'.
--- NULLIF('', '') -> NULL. Limpia strings vacÃ­os que Python puede generar.
+-- NULLIF('', '') -> NULL. Limpia strings vacíos que Python puede generar.
 --
 -- Nota sobre is_first_appointment: viene como string '0'/'1' en algunos CSVs.
 -- El CAST a BOOL maneja tanto booleanos nativos como integers.

@@ -24,8 +24,8 @@ The project builds the full data pipeline from scratch:
    - Intermediate: joins, window functions, business logic (ROW_NUMBER, LAG, RANK)
    - Marts: star schema (4 dims + 3 facts), product analytics, and executive aggregates
 
-4. **BI-ready output** - Partitioned and clustered fact tables feeding Power BI,
-   Tableau, and Metabase dashboards.
+4. **BI-ready output** - Partitioned and clustered fact tables feeding Looker Studio
+   and a standalone HTML dashboard. Tableau and Power BI specs included as reference.
 
 ## Stack
 
@@ -34,7 +34,7 @@ The project builds the full data pipeline from scratch:
 | Data generation | Python 3.12 + Faker |
 | Data warehouse | Google BigQuery (EU region) |
 | Transformations | dbt Core - BigQuery adapter |
-| BI | Power BI / Tableau / Metabase |
+| BI | Looker Studio · standalone HTML dashboard |
 
 ## Repository structure
 
@@ -42,7 +42,7 @@ The project builds the full data pipeline from scratch:
 scripts/            Python: generate, load, validate, export
 sql_practice/       SQL patterns and KPI queries against the mart layer
 dbt_mediconnect/    dbt project: models, macros, tests, seeds, analyses
-dashboards/         Dashboard specs and connection guides (PowerBI, Tableau, Metabase)
+dashboards/         Looker Studio screenshots, standalone HTML dashboard, Tableau/PowerBI specs
 ```
 
 ## Running it

@@ -320,9 +320,25 @@ for i in range(1, N_LEADS + 1):
         lead_status = "converted"
         converted_appt_id = convertible_appts[appt_idx]
         appt_idx += 1
-        # Paciente y médico del appointment (lookup O(1))
+        # Paciente, médico, país y especialidad del appointment (lookup O(1))
         patient_id = appt_patient[converted_appt_id]
         doctor_id = appt_doctor[converted_appt_id]
+        country = doctor_info[doctor_id]["country_id"]
+        specialty = doctor_info[doctor_id]["specialty_id"]
+        # Lead siempre anterior al appointment: trabajamos a nivel de fecha
+        # para garantizar date_diff >= 1 sin casos borde de horas/segundos
+        appt_date = appt_start[converted_appt_id].date()
+        lead_max_date = appt_date - timedelta(days=1)
+        lead_min_date = max(date(2021, 6, 1), appt_date - timedelta(days=60))
+        if lead_min_date > lead_max_date:
+            lead_min_date = lead_max_date
+        lead_date = lead_min_date + timedelta(
+            days=random.randint(0, max(0, (lead_max_date - lead_min_date).days))
+        )
+        created = datetime(
+            lead_date.year, lead_date.month, lead_date.day,
+            random.randint(8, 20), random.randint(0, 59)
+        )
     else:
         lead_status = random.choices(
             ["new", "contacted", "lost"],

@@ -1,3 +1,6 @@
+# === HERRAMIENTAS DE DESARROLLO LOCAL ===
+fix_encoding.py
+
 # === CREDENCIALES - NUNCA AL REPO ===
 .env
 *.json

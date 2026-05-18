@@ -70,7 +70,7 @@ Formato: número grande + variación % vs mes anterior (condicional: verde si me
 
 ### Tabla de cohortes
 - Filas: cohort_month
-- Columnas: M+0, M+1, M+2, M+3, M+4, M+5
+- Columnas: M+1, M+2, M+3, M+4, M+5, M+6
 - Valores: `retention_rate` en formato %
 - Formato condicional: gradiente de rojo (bajo) a verde (alto)
 - Fuente: `mart_patient_retention`

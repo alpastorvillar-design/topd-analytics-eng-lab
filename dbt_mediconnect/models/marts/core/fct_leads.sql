@@ -1,5 +1,5 @@
 -- MART CORE: fct_leads
--- Tabla de hechos de leads con datos del funnel de conversiÃ³n.
+-- Tabla de hechos de leads con datos del funnel de conversión.
 
 {{
     config(

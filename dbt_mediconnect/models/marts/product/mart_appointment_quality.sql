@@ -1,6 +1,6 @@
 -- MART PRODUCT: mart_appointment_quality
--- MÃ©tricas de calidad de citas por canal, especialidad y paÃ­s.
--- Identifica dÃ³nde se concentran no-shows y cancelaciones.
+-- Métricas de calidad de citas por canal, especialidad y país.
+-- Identifica dónde se concentran no-shows y cancelaciones.
 
 with appointments as (
     select * from {{ ref('fct_appointments') }}
@@ -31,7 +31,7 @@ final as (
             countif(status = 'cancelled'), count(*)
         )                                           as cancellation_rate,
 
-        -- Primer canal con mÃ¡s no-shows (Ãºtil para priorizar mejoras)
+        -- Primer canal con más no-shows (útil para priorizar mejoras)
         avg(doctor_rating)                          as avg_doctor_rating
 
     from appointments

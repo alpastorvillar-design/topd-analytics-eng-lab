@@ -1,12 +1,12 @@
 -- INTERMEDIATE: int_patient_lifetime_metrics
 --
--- MÃ©tricas de ciclo de vida por paciente. Una fila por paciente.
--- Estas mÃ©tricas alimentan dim_patients y mart_patient_retention.
+-- Métricas de ciclo de vida por paciente. Una fila por paciente.
+-- Estas métricas alimentan dim_patients y mart_patient_retention.
 --
--- COUNTIF(condiciÃ³n): BigQuery-specific. Equivale a COUNT(CASE WHEN ... END).
+-- COUNTIF(condición): BigQuery-specific. Equivale a COUNT(CASE WHEN ... END).
 -- SAFE_DIVIDE(a, b): divide sin error si b = 0. Devuelve NULL en vez de crash.
--- DATE_TRUNC(fecha, MONTH): trunca fecha al primer dÃ­a del mes.
---   Ãštil para cohort analysis: todos los pacientes con primera cita completada
+-- DATE_TRUNC(fecha, MONTH): trunca fecha al primer día del mes.
+--   Útil para cohort analysis: todos los pacientes con primera cita completada
 --   en el mismo mes forman una cohorte.
 
 with appointments as (
@@ -42,7 +42,7 @@ patient_metrics as (
         sum(case when a.payment_status = 'paid'
             then a.amount_cents else 0 end)                as total_revenue_cents,
 
-        -- Ratios (SAFE_DIVIDE evita divisiÃ³n por cero)
+        -- Ratios (SAFE_DIVIDE evita división por cero)
         safe_divide(
             countif(a.status = 'no_show'),
             count(*)
