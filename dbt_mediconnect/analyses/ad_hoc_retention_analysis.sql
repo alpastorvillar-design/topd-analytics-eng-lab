@@ -1,6 +1,6 @@
 -- ad_hoc_retention_analysis.sql
 -- Exploratory analysis of patient retention patterns.
--- Run directly in dbt Cloud IDE or BigQuery Console.
+-- Run directly in the dbt CLI or BigQuery Console.
 -- Not part of the production DAG.
 
 -- 1. Monthly active patients over time

@@ -23,7 +23,11 @@ models:
         data_tests:
           - not_null
       - name: retention_rate
-        description: retained_patients / cohort_size (SAFE_DIVIDE, NULL-safe).
+        description: retained_patients / cohort_size (SAFE_DIVIDE, NULL-safe). Range 0–1.
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0 and retention_rate <= 1"
 
   - name: mart_doctor_supply_demand
     description: >
@@ -96,10 +100,22 @@ models:
       - name: scheduled
         description: Count of appointments still in 'scheduled' status (future or pending).
       - name: completion_rate
-        description: completed / total_appointments (SAFE_DIVIDE).
+        description: completed / total_appointments (SAFE_DIVIDE). Range 0–1.
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0 and completion_rate <= 1"
       - name: no_show_rate
-        description: no_show / total_appointments (SAFE_DIVIDE).
+        description: no_show / total_appointments (SAFE_DIVIDE). Range 0–1.
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0 and no_show_rate <= 1"
       - name: cancellation_rate
-        description: cancelled / total_appointments (SAFE_DIVIDE).
+        description: cancelled / total_appointments (SAFE_DIVIDE). Range 0–1.
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0 and cancellation_rate <= 1"
       - name: avg_doctor_rating
         description: Average doctor rating for appointments in this group.

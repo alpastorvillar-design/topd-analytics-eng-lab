@@ -126,6 +126,7 @@ dim_patients    ─┘             │
 | `fct_appointments` — partition by month + clustering | ![BQ partition](assets/bigquery/fct_appointments_partition_cluster.png) |
 | Dry-run full scan (no partition filter) — 1.6 MB | ![BQ dry-run full](assets/bigquery/dry_run_full_scan.png) |
 | Dry-run with partition filter (1 month) — 59 KB | ![BQ dry-run filter](assets/bigquery/dry_run_with_filter.png) |
+| GitHub Actions CI — dbt parse + sqlfluff green | ![CI green](assets/github/actions_green.png) |
 
 ---
 

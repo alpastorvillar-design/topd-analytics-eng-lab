@@ -130,9 +130,7 @@ models:
       - name: amount_cents
         description: Payment amount in cents stored as INT64 to avoid floating-point precision issues. 1500 = €15.00.
         data_tests:
-          - accepted_values:
-              arguments:
-                values: ['paid', 'refunded', 'failed', 'pending']
+          - not_null
       - name: currency
         description: ISO 4217 currency code, uppercased.
       - name: payment_status

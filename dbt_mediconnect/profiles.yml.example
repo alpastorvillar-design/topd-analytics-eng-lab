@@ -1,6 +1,6 @@
 # COPIA este archivo como profiles.yml (sin .example) para uso local
 # profiles.yml está en .gitignore - NUNCA lo subas al repo
-# En dbt Cloud las credenciales se configuran en la UI, no aquí
+# En uso remoto las credenciales se configuran en variables de entorno o en la UI del orquestador
 
 mediconnect:
   target: dev

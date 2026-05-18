@@ -435,10 +435,13 @@ models:
         description: Last modification timestamp.
         data_type: timestamp
       - name: amount_cents
-        description: Payment amount in cents.
+        description: Payment amount in cents. Must be greater than zero for any recorded payment.
         data_type: int64
         data_tests:
           - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "> 0"
       - name: amount_eur
         description: Payment amount in euros (amount_cents / 100).
         data_type: float64

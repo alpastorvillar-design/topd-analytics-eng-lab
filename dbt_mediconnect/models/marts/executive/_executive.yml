@@ -41,9 +41,17 @@ models:
       - name: lead_conversion_rate
         description: converted_leads / total_leads (SAFE_DIVIDE).
       - name: cumulative_revenue_eur
-        description: Running total of revenue from the earliest date to the current row (SUM OVER unbounded preceding).
+        description: Running total of revenue from the earliest date to the current row (SUM OVER unbounded preceding). Must be non-negative.
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
       - name: cumulative_appointments
-        description: Running total of appointments from the earliest date to the current row (SUM OVER unbounded preceding).
+        description: Running total of appointments from the earliest date to the current row (SUM OVER unbounded preceding). Must be non-negative.
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
 
   - name: agg_monthly_country_kpis
     description: >
