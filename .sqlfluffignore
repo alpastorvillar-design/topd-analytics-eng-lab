@@ -3,6 +3,8 @@ dbt_packages/
 data/
 .venv/
 
+# Ignoramos rutas generadas/locales para revisar solo SQL versionado.
+
 # Los snapshots usan el tag dbt-specific {% snapshot %} que el templater
 # jinja no entiende. Se revisan localmente con dbt compile.
 dbt_mediconnect/snapshots/

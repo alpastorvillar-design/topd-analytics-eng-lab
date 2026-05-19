@@ -3,6 +3,9 @@ dialect = bigquery
 templater = jinja
 max_line_length = 120
 
+# CI usa esta config como contrato de estilo bloqueante para modelos dbt.
+# sql_practice se revisa aparte como material formativo advisory-only.
+
 # Reglas excluidas (convenciones de estilo elegidas en el proyecto):
 #
 # LT01  Aligned 'as' keyword con multiples espacios. Convencion de columnas
