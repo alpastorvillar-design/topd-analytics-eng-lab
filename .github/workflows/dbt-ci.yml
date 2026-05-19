@@ -72,6 +72,7 @@ jobs:
       # sql_practice files mix conventions on purpose to show different
       # styles. The lint runs as informational only and never blocks CI;
       # the dbt models above are the source of truth for the project style.
-      - name: sqlfluff lint (sql_practice, advisory only)
-        continue-on-error: true
-        run: sqlfluff lint sql_practice/ --dialect bigquery --templater raw
+      # `|| true` swallows the exit code so the step renders green; lint
+      # findings are still printed in the logs for anyone curious.
+      - name: sqlfluff lint (sql_practice, informational)
+        run: sqlfluff lint sql_practice/ --dialect bigquery --templater raw || true

@@ -1,5 +1,7 @@
 # MediConnect Analytics Lab
 
+[![dbt CI](https://github.com/alpastorvillar-design/topd-analytics-eng-lab/actions/workflows/dbt-ci.yml/badge.svg)](https://github.com/alpastorvillar-design/topd-analytics-eng-lab/actions/workflows/dbt-ci.yml)
+
 End-to-end Analytics Engineering project simulating the data stack of an eHealth marketplace.
 Covers the full pipeline: synthetic data generation in Python, raw ingestion into BigQuery,
 multi-layer dbt transformations, and BI-ready marts consumed by Looker Studio and a standalone
