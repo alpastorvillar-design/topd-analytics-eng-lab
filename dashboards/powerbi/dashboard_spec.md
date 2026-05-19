@@ -24,7 +24,7 @@ Vista de negocio de alto nivel para C-level. Una pantalla, sin scroll.
 - **Revenue MTD** - `SUM(daily_revenue_eur)` filtrado al mes actual
 - **Citas completadas MTD** - `SUM(completed_appointments)` mes actual
 - **Lead conversion rate** - `AVG(lead_conversion_rate)` últimos 30 días
-- **No-show rate** - `AVG(1 - completion_rate)` últimos 30 días
+- **No-show rate** - `SUM(no_show_appointments) / SUM(total_appointments)` últimos 30 días (no usar `1 - completion_rate`: mezcla canceladas y scheduled)
 
 Formato: número grande + variación % vs mes anterior (condicional: verde si mejora, rojo si empeora)
 

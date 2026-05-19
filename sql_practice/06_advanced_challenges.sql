@@ -127,26 +127,34 @@ group by acquisition_month
 order by acquisition_month;
 
 
--- 7. Días desde la última cita por paciente + segmento de actividad
+-- 7. Días desde la última cita por paciente + segmento de actividad.
+-- Anclado a MAX(appointment_date) del dataset (2022-2024) en vez de
+-- CURRENT_DATE() para que la segmentación tenga sentido sobre datos históricos.
+with anchor as (
+    select max(appointment_date) as anchor_date
+    from `topd-lab.dbt_marts.fct_appointments`
+    where status = 'completed'
+)
 select distinct
-    patient_id,
-    MAX(appointment_date) over (partition by patient_id) as last_appointment_date,
+    f.patient_id,
+    MAX(f.appointment_date) over (partition by f.patient_id) as last_appointment_date,
     DATE_DIFF(
-        CURRENT_DATE(),
-        MAX(appointment_date) over (partition by patient_id),
+        a.anchor_date,
+        MAX(f.appointment_date) over (partition by f.patient_id),
         day
     )                                                    as days_since_last_visit,
     case
-        when DATE_DIFF(CURRENT_DATE(),
-             MAX(appointment_date) over (partition by patient_id), day) <= 90
+        when DATE_DIFF(a.anchor_date,
+             MAX(f.appointment_date) over (partition by f.patient_id), day) <= 90
              then 'active'
-        when DATE_DIFF(CURRENT_DATE(),
-             MAX(appointment_date) over (partition by patient_id), day) <= 365
+        when DATE_DIFF(a.anchor_date,
+             MAX(f.appointment_date) over (partition by f.patient_id), day) <= 365
              then 'at_risk'
         else 'churned'
     end                                                  as patient_segment
-from `topd-lab.dbt_marts.fct_appointments`
-where status = 'completed'
+from `topd-lab.dbt_marts.fct_appointments` as f
+cross join anchor as a
+where f.status = 'completed'
 order by days_since_last_visit desc;
 
 

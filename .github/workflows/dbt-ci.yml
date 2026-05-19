@@ -69,9 +69,9 @@ jobs:
         working-directory: dbt_mediconnect
         run: sqlfluff lint models/ --dialect bigquery
 
-      # sql_practice files use traditional UPPERCASE keywords (study/exam
-       # style) which conflicts with the lowercase convention of the dbt
-       # models. The lint runs as informational only and never blocks CI.
+      # sql_practice files mix conventions on purpose to show different
+      # styles. The lint runs as informational only and never blocks CI;
+      # the dbt models above are the source of truth for the project style.
       - name: sqlfluff lint (sql_practice, advisory only)
         continue-on-error: true
         run: sqlfluff lint sql_practice/ --dialect bigquery --templater raw

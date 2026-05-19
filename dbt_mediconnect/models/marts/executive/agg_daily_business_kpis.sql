@@ -43,6 +43,7 @@ combined as (
         coalesce(a.new_patient_appointments, 0)     as new_patient_appointments,
         coalesce(p.daily_revenue_eur, 0)            as daily_revenue_eur,
         coalesce(p.paid_payments, 0)                as paid_payments,
+        coalesce(p.refunded_payments, 0)            as refunded_payments,
         coalesce(l.total_leads, 0)                  as total_leads,
         coalesce(l.converted_leads, 0)              as converted_leads
     from appointments a
@@ -59,6 +60,7 @@ final as (
         new_patient_appointments,
         daily_revenue_eur,
         paid_payments,
+        refunded_payments,
         total_leads,
         converted_leads,
 

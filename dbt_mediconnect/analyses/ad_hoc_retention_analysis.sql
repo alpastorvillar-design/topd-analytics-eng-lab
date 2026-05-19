@@ -37,25 +37,33 @@ GROUP BY cohort, cohort_size
 ORDER BY cohort;
 
 
--- 3. Patient segment distribution (active / at_risk / churned)
+-- 3. Patient segment distribution (active / at_risk / churned).
+-- Anclado a MAX(appointment_date) del dataset para que el segmento tenga
+-- sentido contra datos históricos (2022-2024).
+WITH anchor AS (
+    SELECT MAX(appointment_date) AS anchor_date
+    FROM {{ ref('fct_appointments') }}
+    WHERE status = 'completed'
+)
 SELECT
     patient_segment,
     COUNT(*)                            AS patients,
     SAFE_DIVIDE(COUNT(*), SUM(COUNT(*)) OVER ()) AS pct_of_total
 FROM (
     SELECT DISTINCT
-        patient_id,
+        f.patient_id,
         CASE
-            WHEN DATE_DIFF(CURRENT_DATE(),
-                 MAX(appointment_date) OVER (PARTITION BY patient_id), DAY) <= 90
+            WHEN DATE_DIFF(a.anchor_date,
+                 MAX(f.appointment_date) OVER (PARTITION BY f.patient_id), DAY) <= 90
                  THEN 'active'
-            WHEN DATE_DIFF(CURRENT_DATE(),
-                 MAX(appointment_date) OVER (PARTITION BY patient_id), DAY) <= 365
+            WHEN DATE_DIFF(a.anchor_date,
+                 MAX(f.appointment_date) OVER (PARTITION BY f.patient_id), DAY) <= 365
                  THEN 'at_risk'
             ELSE 'churned'
         END AS patient_segment
-    FROM {{ ref('fct_appointments') }}
-    WHERE status = 'completed'
+    FROM {{ ref('fct_appointments') }} AS f
+    CROSS JOIN anchor AS a
+    WHERE f.status = 'completed'
 )
 GROUP BY patient_segment
 ORDER BY patients DESC;

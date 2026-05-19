@@ -16,25 +16,35 @@ SELECT COUNT(*) FROM `topd-lab.dbt_marts.fct_appointments`
 WHERE appointment_date >= '2024-01-01'
   AND status = 'completed';
 
--- BIEN: dinámico, últimos 90 días sin hardcodear fechas
+-- BIEN: dinámico, últimos 90 días anclados al máximo del dataset.
+-- Se usa MAX(appointment_date) en vez de CURRENT_DATE() porque el dataset
+-- sintético cubre 2022-2024 y CURRENT_DATE() puede dejar la ventana vacía.
 SELECT COUNT(*) FROM `topd-lab.dbt_marts.fct_appointments`
-WHERE appointment_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY)
+WHERE appointment_date >= DATE_SUB(
+    (SELECT MAX(appointment_date) FROM `topd-lab.dbt_marts.fct_appointments`),
+    INTERVAL 90 DAY
+)
   AND status = 'completed';
 
 
 -- 2. Clustering: filtrar por columnas de cluster tras partition pruning.
 --    fct_appointments clusters por [country_id, specialty_id, status].
 --    BQ salta bloques que no coinciden. Sin reducir coste, acelera la ejecución.
+--    Las columnas se prefijan con el alias porque specialty_id, country_id
+--    y amount_eur existen en ambas tablas tras USING(appointment_id).
 SELECT
-    specialty_id,
+    a.specialty_id,
     COUNT(*)                AS appointments,
-    SUM(amount_eur)         AS revenue
+    SUM(p.amount_eur)       AS revenue
 FROM `topd-lab.dbt_marts.fct_appointments` AS a
 LEFT JOIN `topd-lab.dbt_marts.fct_payments` AS p USING (appointment_id)
-WHERE appointment_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY)
-  AND country_id   = 'ES'
-  AND status       = 'completed'
-GROUP BY specialty_id;
+WHERE a.appointment_date >= DATE_SUB(
+    (SELECT MAX(appointment_date) FROM `topd-lab.dbt_marts.fct_appointments`),
+    INTERVAL 365 DAY
+)
+  AND a.country_id = 'ES'
+  AND a.status     = 'completed'
+GROUP BY a.specialty_id;
 
 
 -- 3. SELECT solo las columnas necesarias, evitar SELECT *.

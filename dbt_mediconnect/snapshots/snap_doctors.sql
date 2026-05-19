@@ -5,7 +5,8 @@
 -- (dbt_valid_to) y abre una nueva versión (dbt_valid_from).
 --
 -- 'doctors' no tiene updated_at fiable (Faker no lo simula), por eso usamos
--- 'check' en vez de 'timestamp'. is_active y rating son los campos volátiles.
+-- 'check' en vez de 'timestamp'. Los campos volátiles que controlamos son
+-- is_active, rating, years_experience y accepts_online_booking.
 
 {% snapshot snap_doctors %}
 {{

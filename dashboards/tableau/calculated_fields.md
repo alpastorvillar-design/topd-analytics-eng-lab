@@ -16,7 +16,8 @@ For most KPIs, the marts already have the value - these are for in-viz formattin
 // Table Calculation -> Percent Difference -> Along: month
 
 // Revenue MTD (using LOD)
-{ FIXED [appointment_date] : SUM([amount_eur]) }
+// fct_payments exposes payment_date (not appointment_date); use that field.
+{ FIXED [payment_date] : SUM([amount_eur]) }
 // Then filter to current month in a date filter
 ```
 
@@ -93,7 +94,12 @@ END
 
 ```
 // Supply pressure index (appointments per active doctor)
-SUM([total_appointments]) / COUNTD([doctor_id])
+// mart_doctor_supply_demand already exposes appointments_per_doctor pre-aggregated.
+// Use it directly instead of recomputing — the mart does not expose doctor_id row-level.
+AVG([appointments_per_doctor])
+
+// If you connect to fct_appointments + dim_doctors instead of the mart:
+// SUM([total_appointments]) / COUNTD([doctor_id])
 
 // Specialty demand share
 SUM([total_appointments]) / TOTAL(SUM([total_appointments]))

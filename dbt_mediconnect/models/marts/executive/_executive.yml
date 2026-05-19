@@ -6,6 +6,8 @@ models:
       Daily business KPIs aggregated across all countries and specialties.
       Includes running totals (cumulative_revenue_eur, cumulative_appointments)
       computed with SUM OVER window functions. Feeds the executive dashboard.
+      Filters out dates with zero appointments (WHERE total_appointments > 0)
+      so the time series is contiguous on dates with real activity.
     columns:
       - name: date
         description: Calendar date.

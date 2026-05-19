@@ -33,17 +33,25 @@ from monthly_revenue
 order by month;
 
 
--- 2. Revenue MTD, QTD, YTD usando anclas de fecha
+-- 2. Revenue MTD, QTD, YTD anclados al máximo del dataset.
+-- El dataset sintético cubre 2022-2024; usar CURRENT_DATE() dejaría las
+-- ventanas vacías. anchor_date = último día con pago confirmado.
+with anchor as (
+    select max(payment_date) as anchor_date
+    from `topd-lab.dbt_marts.fct_payments`
+    where payment_status = 'paid'
+)
 select
-    ROUND(SUM(case when payment_date >= DATE_TRUNC(CURRENT_DATE(), month)
-                   then amount_eur else 0 end), 2)      as revenue_mtd,
-    ROUND(SUM(case when payment_date >= DATE_TRUNC(CURRENT_DATE(), quarter)
-                   then amount_eur else 0 end), 2)      as revenue_qtd,
-    ROUND(SUM(case when payment_date >= DATE_TRUNC(CURRENT_DATE(), year)
-                   then amount_eur else 0 end), 2)      as revenue_ytd,
-    ROUND(SUM(amount_eur), 2)                           as revenue_all_time
-from `topd-lab.dbt_marts.fct_payments`
-where payment_status = 'paid';
+    ROUND(SUM(case when p.payment_date >= DATE_TRUNC(a.anchor_date, month)
+                   then p.amount_eur else 0 end), 2)    as revenue_mtd,
+    ROUND(SUM(case when p.payment_date >= DATE_TRUNC(a.anchor_date, quarter)
+                   then p.amount_eur else 0 end), 2)    as revenue_qtd,
+    ROUND(SUM(case when p.payment_date >= DATE_TRUNC(a.anchor_date, year)
+                   then p.amount_eur else 0 end), 2)    as revenue_ytd,
+    ROUND(SUM(p.amount_eur), 2)                         as revenue_all_time
+from `topd-lab.dbt_marts.fct_payments` as p
+cross join anchor as a
+where p.payment_status = 'paid';
 
 
 -- 3. Completion rate, no-show rate, cancellation rate por canal y mes

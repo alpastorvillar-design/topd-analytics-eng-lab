@@ -23,7 +23,7 @@ The project builds the full data pipeline from scratch:
    - Staging: type casting and renaming, materialised as views
    - Intermediate: joins, window functions, business logic (ROW_NUMBER, LAG, RANK)
    - Marts: star schema (4 dims + 3 facts), product analytics, and executive aggregates
-   - Snapshots: SCD2 on `snap_doctors` (check strategy, tracks `is_active` and `rating`)
+   - Snapshots: SCD2 on `snap_doctors` (tracks `is_active`, `rating`, `years_experience`, `accepts_online_booking`) and `snap_patients` (tracks `is_active`, `city`, `country_id`, `acquisition_channel`), both with the check strategy
    - Tests + CI: singular and generic tests, GitHub Actions runs `dbt parse` + `sqlfluff lint` on every PR
 
 4. **BI-ready output** - Partitioned and clustered fact tables feeding Looker Studio

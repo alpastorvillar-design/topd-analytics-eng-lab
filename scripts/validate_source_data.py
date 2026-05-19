@@ -7,8 +7,10 @@ Comprueba integridad referencial, nulos en campos obligatorios y rangos.
 Ejecutar:
     python scripts/validate_source_data.py
 
-Una validación fallida imprime un WARNING pero no lanza excepción,
-para que puedas revisar todos los problemas a la vez.
+Cada check se ejecuta hasta el final aunque otros fallen, para que puedas
+revisar todos los problemas a la vez. Si al menos un check falla, el script
+imprime el resumen y termina con exit code 1 (SystemExit) para integrarse
+con CI/CD y pipelines de orquestación.
 """
 
 import os

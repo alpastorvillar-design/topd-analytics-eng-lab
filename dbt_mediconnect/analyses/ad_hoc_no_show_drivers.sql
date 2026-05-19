@@ -62,13 +62,17 @@ ORDER BY month;
 
 
 -- 4. Doctor rating vs no-show rate (do higher-rated doctors have fewer no-shows?)
+-- mart_appointment_quality already exposes per-group counts (no_show, total_appointments),
+-- so we aggregate those instead of trying to filter raw status rows.
 SELECT
     ROUND(avg_doctor_rating, 1)             AS rating_bucket,
-    COUNT(*)                                AS total_appointments,
+    SUM(total_appointments)                 AS total_appointments,
+    SUM(no_show)                            AS no_shows,
     SAFE_DIVIDE(
-        COUNTIF(status = 'no_show'), COUNT(*)
+        SUM(no_show), SUM(total_appointments)
     )                                       AS no_show_rate
 FROM {{ ref('mart_appointment_quality') }}
+WHERE avg_doctor_rating IS NOT NULL
 GROUP BY rating_bucket
 ORDER BY rating_bucket DESC;
 

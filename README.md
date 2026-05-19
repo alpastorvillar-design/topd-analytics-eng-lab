@@ -79,7 +79,7 @@ mediconnect-analytics-lab/
 │   │       ├── core/               # dim_* + fct_* (star schema)
 │   │       ├── product/            # retention, quality, supply/demand
 │   │       └── executive/          # daily/monthly/specialty KPIs
-│   ├── snapshots/                  # SCD2 captures (e.g. snap_doctors)
+│   ├── snapshots/                  # SCD2 captures (snap_doctors, snap_patients)
 │   ├── macros/
 │   ├── tests/
 │   ├── seeds/
@@ -237,9 +237,16 @@ by `[country_id, specialty_id, status]` for cost-efficient queries.
 `agg_daily_business_kpis`, `agg_monthly_country_kpis`, `agg_specialty_performance`.
 
 ### Snapshots
-`snap_doctors` captures slowly-changing attributes (`is_active`, `rating`) with
-the `check` strategy, so historical state is preserved even if the source row
-is updated in place.
+Both snapshots use the `check` strategy so historical state is preserved even
+when the source row is updated in place.
+
+- `snap_doctors` tracks `is_active`, `rating`, `years_experience` and
+  `accepts_online_booking`. Useful for answering "what was this doctor's rating
+  in March 2023?" after a profile edit.
+- `snap_patients` tracks `is_active`, `city`, `country_id` and
+  `acquisition_channel`. Patients may deactivate, relocate or be reassigned
+  to a different acquisition channel; the snapshot keeps the history needed
+  for retention and acquisition cohort analysis over time.
 
 ---
 
