@@ -98,6 +98,9 @@ order by ltv_eur desc;
 
 
 -- 5. Funnel lead-to-revenue con conversión por etapa
+-- NOTA: se usa is_converted_to_appointment (boolean) en vez de lead_status = 'converted'
+-- porque lead_status no tiene valor 'converted' en este dataset; el flag booleano
+-- es el campo fiable para identificar leads que convirtieron en cita.
 with leads as (
     select DATE_TRUNC(lead_date, month) as month, COUNT(*) as total_leads
     from `topd-lab.dbt_marts.fct_leads`
@@ -106,7 +109,7 @@ with leads as (
 converted as (
     select DATE_TRUNC(lead_date, month) as month, COUNT(*) as converted_leads
     from `topd-lab.dbt_marts.fct_leads`
-    where lead_status = 'converted'
+    where is_converted_to_appointment = TRUE
     group by month
 ),
 paid as (

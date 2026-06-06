@@ -64,33 +64,34 @@ group by channel
 order by appointments desc;
 
 
--- 5. Funnel completo: lead -> cita -> pago
-with funnel as (
-    select
-        DATE_TRUNC(lead_date, month)           as month,
-        COUNT(*)                                as total_leads,
-        COUNTIF(lead_status = 'converted')      as converted_leads
-    from `topd-lab.dbt_marts.fct_leads`
-    group by month
-),
-payments_per_month as (
-    select
-        DATE_TRUNC(payment_date, month)         as month,
-        COUNTIF(payment_status = 'paid')        as paid_appointments
-    from `topd-lab.dbt_marts.fct_payments`
-    group by month
-)
-select
-    f.month,
-    f.total_leads,
-    f.converted_leads,
-    p.paid_appointments,
-    SAFE_DIVIDE(f.converted_leads, f.total_leads)        as lead_to_appt_rate,
-    SAFE_DIVIDE(p.paid_appointments, f.converted_leads)  as appt_to_payment_rate,
-    SAFE_DIVIDE(p.paid_appointments, f.total_leads)      as end_to_end_rate
-from funnel as f
-left join payments_per_month as p using (month)
-order by f.month;
+-- 5. Funnel completo: lead -> cita -> pago por canal de adquisición
+-- VERSIÓN CORRECTA: anclada a la cohorte del lead (lead_date), no al mes del evento.
+-- Así evitamos que pagos de meses anteriores inflen las tasas del mes actual.
+-- fct_leads ya contiene los flags is_converted_to_appointment / is_converted_to_payment,
+-- por lo que no necesitamos JOINs adicionales.
+-- Se excluye el mes en curso porque los datos no están cerrados.
+SELECT
+    DATE_TRUNC(lead_date, MONTH)                         AS lead_month,
+    lead_source,
+    COUNT(DISTINCT lead_id)                              AS total_leads,
+    COUNTIF(is_converted_to_appointment = TRUE)          AS converted_to_appointment,
+    COUNTIF(is_converted_to_payment = TRUE)              AS converted_to_payment,
+    ROUND(SAFE_DIVIDE(
+        COUNTIF(is_converted_to_appointment = TRUE),
+        COUNT(DISTINCT lead_id)
+    ), 4)                                                AS lead_to_appt_rate,
+    ROUND(SAFE_DIVIDE(
+        COUNTIF(is_converted_to_payment = TRUE),
+        COUNTIF(is_converted_to_appointment = TRUE)
+    ), 4)                                                AS appt_to_payment_rate,
+    ROUND(SAFE_DIVIDE(
+        COUNTIF(is_converted_to_payment = TRUE),
+        COUNT(DISTINCT lead_id)
+    ), 4)                                                AS end_to_end_rate
+FROM `topd-lab.dbt_marts.fct_leads`
+WHERE lead_date < DATE_TRUNC(CURRENT_DATE(), MONTH)
+GROUP BY lead_month, lead_source
+ORDER BY lead_month, lead_source;
 
 
 -- 6. Pacientes que volvieron dentro de los 90 días de su primera cita

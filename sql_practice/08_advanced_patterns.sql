@@ -6,15 +6,21 @@
 
 -- 1. Manual PIVOT: revenue mensual por canal en columnas.
 --    BigQuery no tiene keyword PIVOT en sintaxis legacy; usamos conditional aggregation.
+--
+--    PASO PREVIO — verificar los valores reales de channel antes de ejecutar:
+--    SELECT DISTINCT channel FROM `topd-lab.dbt_marts.fct_appointments` ORDER BY 1;
+--    Actualizar las columnas del CASE WHEN con los valores que devuelva esa query.
+--
+--    Ejemplo con valores genéricos (ajustar a los valores reales del dataset):
 select
-    DATE_TRUNC(p.payment_date, month)                         as month,
-    ROUND(SUM(case when a.channel = 'web'    then p.amount_eur else 0 end), 2) as web_revenue,
+    DATE_TRUNC(p.payment_date, month)                             as month,
+    ROUND(SUM(case when a.channel = 'online' then p.amount_eur else 0 end), 2) as online_revenue,
     ROUND(SUM(case when a.channel = 'app'    then p.amount_eur else 0 end), 2) as app_revenue,
     ROUND(SUM(case when a.channel = 'phone'  then p.amount_eur else 0 end), 2) as phone_revenue,
-    ROUND(SUM(case when a.channel = 'clinic'   then p.amount_eur else 0 end), 2) as clinic_revenue,
-    ROUND(SUM(p.amount_eur), 2)                               as total_revenue
-from `topd-lab.dbt_marts.fct_payments` as p
-join `topd-lab.dbt_marts.fct_appointments` as a using (appointment_id)
+    ROUND(SUM(case when a.channel = 'clinic' then p.amount_eur else 0 end), 2) as clinic_revenue,
+    ROUND(SUM(p.amount_eur), 2)                                   as total_revenue
+from `topd-lab.dbt_marts.fct_payments`      as p
+join `topd-lab.dbt_marts.fct_appointments`  as a using (appointment_id)
 where p.payment_status = 'paid'
 group by month
 order by month;

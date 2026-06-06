@@ -95,20 +95,23 @@ where payment_date >= '2024-01-01'
 
 -- 7. IF y CASE: expresiones condicionales
 -- IF(condición, valor_si_true, valor_si_false). Solo BigQuery.
+-- NOTA: se usan aliases explícitos (appt/pay) porque amount_eur existe en ambas
+-- tablas. Sin alias, BigQuery lanza error de nombre ambiguo.
 select
-    appointment_id,
-    status,
-    IF(status = 'completed', 'Exitosa', 'No completada')    as outcome,
-    case status
+    appt.appointment_id,
+    appt.status,
+    IF(appt.status = 'completed', 'Exitosa', 'No completada')    as outcome,
+    case appt.status
         when 'completed' then 'Exitosa'
         when 'cancelled' then 'Cancelada'
         when 'no_show'   then 'No se presentó'
         else 'Pendiente'
-    end                                                     as outcome_label,
-    -- Pivot manual con IF:
-    IF(status = 'completed', amount_eur, 0)                 as revenue_if_completed
-from `topd-lab.dbt_marts.fct_appointments`
-left join `topd-lab.dbt_marts.fct_payments` using (appointment_id)
+    end                                                          as outcome_label,
+    -- Pivot manual con IF: usa el amount_eur de la cita (siempre disponible)
+    IF(appt.status = 'completed', appt.amount_eur, 0)            as revenue_if_completed
+from `topd-lab.dbt_marts.fct_appointments`      as appt
+left join `topd-lab.dbt_marts.fct_payments`     as pay
+    on appt.appointment_id = pay.appointment_id
 limit 20;
 
 
