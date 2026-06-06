@@ -10,8 +10,8 @@ with appointments as (
         countif(status = 'no_show')             as no_show_appointments,
         count(distinct patient_id)              as unique_patients,
         count(distinct doctor_id)               as active_doctors,
-        sum(case when payment_status = 'paid'
-            then amount_eur else 0 end)         as total_revenue_eur
+        round(sum(case when payment_status = 'paid'
+            then amount_eur else 0 end), 2)     as total_revenue_eur
     from {{ ref('fct_appointments') }}
     group by month, specialty_id
 ),
@@ -34,15 +34,15 @@ final as (
         a.active_doctors,
         coalesce(a.total_revenue_eur, 0)        as total_revenue_eur,
 
-        safe_divide(
+        round(safe_divide(
             a.completed_appointments,
             a.total_appointments
-        )                                       as completion_rate,
+        ), 4)                                   as completion_rate,
 
-        safe_divide(
+        round(safe_divide(
             a.total_appointments,
             a.active_doctors
-        )                                       as appointments_per_doctor,
+        ), 2)                                   as appointments_per_doctor,
 
         rank() over (
             partition by a.month

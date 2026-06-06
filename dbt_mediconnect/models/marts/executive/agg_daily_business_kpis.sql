@@ -17,8 +17,8 @@ with appointments as (
 payments as (
     select
         payment_date                                as date,
-        sum(case when payment_status = 'paid'
-            then amount_eur else 0 end)             as daily_revenue_eur,
+        round(sum(case when payment_status = 'paid'
+            then amount_eur else 0 end), 2)         as daily_revenue_eur,
         countif(payment_status = 'paid')            as paid_payments,
         countif(payment_status = 'refunded')        as refunded_payments
     from {{ ref('fct_payments') }}
@@ -65,15 +65,15 @@ final as (
         converted_leads,
 
         -- Ratios diarios
-        safe_divide(completed_appointments, total_appointments) as completion_rate,
-        safe_divide(converted_leads, total_leads)               as lead_conversion_rate,
+        round(safe_divide(completed_appointments, total_appointments), 4) as completion_rate,
+        round(safe_divide(converted_leads, total_leads), 4)               as lead_conversion_rate,
 
         -- Acumulados con window functions
         -- SUM OVER: suma desde el inicio hasta la fila actual
-        sum(daily_revenue_eur) over (
+        round(sum(daily_revenue_eur) over (
             order by date
             rows between unbounded preceding and current row
-        )                                                       as cumulative_revenue_eur,
+        ), 2)                                                   as cumulative_revenue_eur,
 
         sum(total_appointments) over (
             order by date

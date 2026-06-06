@@ -66,7 +66,7 @@ final as (
         r.months_since_acquisition,
         cs.cohort_size,
         r.retained_patients,
-        safe_divide(r.retained_patients, cs.cohort_size) as retention_rate
+        round(safe_divide(r.retained_patients, cs.cohort_size), 4) as retention_rate
 
     from retention r
     inner join cohort_sizes cs using (cohort_month)

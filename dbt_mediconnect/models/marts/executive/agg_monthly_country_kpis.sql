@@ -18,7 +18,7 @@ revenue as (
     select
         date_trunc(payment_date, month)         as month,
         country_id,
-        sum(amount_eur)                         as total_revenue_eur
+        round(sum(amount_eur), 2)               as total_revenue_eur
     from {{ ref('fct_payments') }}
     where payment_status = 'paid'
     group by month, country_id
@@ -42,15 +42,15 @@ final as (
         a.active_doctors,
         coalesce(r.total_revenue_eur, 0)        as total_revenue_eur,
 
-        safe_divide(
+        round(safe_divide(
             a.completed_appointments,
             a.total_appointments
-        )                                       as completion_rate,
+        ), 4)                                   as completion_rate,
 
-        safe_divide(
+        round(safe_divide(
             coalesce(r.total_revenue_eur, 0),
             a.unique_patients
-        )                                       as revenue_per_patient,
+        ), 2)                                   as revenue_per_patient,
 
         -- Ranking de países por revenue ese mes
         rank() over (

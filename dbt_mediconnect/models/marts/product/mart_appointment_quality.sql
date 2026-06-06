@@ -19,20 +19,19 @@ final as (
         countif(status = 'no_show')                 as no_show,
         countif(status = 'scheduled')               as scheduled,
 
-        safe_divide(
+        round(safe_divide(
             countif(status = 'completed'), count(*)
-        )                                           as completion_rate,
+        ), 4)                                       as completion_rate,
 
-        safe_divide(
+        round(safe_divide(
             countif(status = 'no_show'), count(*)
-        )                                           as no_show_rate,
+        ), 4)                                       as no_show_rate,
 
-        safe_divide(
+        round(safe_divide(
             countif(status = 'cancelled'), count(*)
-        )                                           as cancellation_rate,
+        ), 4)                                       as cancellation_rate,
 
-        -- Primer canal con más no-shows (útil para priorizar mejoras)
-        avg(doctor_rating)                          as avg_doctor_rating
+        round(avg(doctor_rating), 2)                as avg_doctor_rating
 
     from appointments
     group by month, channel, specialty_id, country_id

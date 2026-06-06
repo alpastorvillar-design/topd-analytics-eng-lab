@@ -43,15 +43,15 @@ patient_metrics as (
             then a.amount_cents else 0 end)                as total_revenue_cents,
 
         -- Ratios (SAFE_DIVIDE evita división por cero)
-        safe_divide(
+        round(safe_divide(
             countif(a.status = 'no_show'),
             count(*)
-        )                                                   as no_show_rate,
+        ), 4)                                               as no_show_rate,
 
-        safe_divide(
+        round(safe_divide(
             countif(a.status = 'cancelled'),
             count(*)
-        )                                                   as cancellation_rate,
+        ), 4)                                               as cancellation_rate,
 
         -- Especialidades distintas consultadas
         count(distinct a.specialty_id)                     as distinct_specialties_consulted

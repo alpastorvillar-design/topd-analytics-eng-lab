@@ -20,8 +20,8 @@ doctors as (
         specialty_id,
         country_id,
         countif(is_active = true)               as total_active_doctors,
-        avg(rating)                             as avg_doctor_rating,
-        avg(years_experience)                   as avg_years_experience
+        round(avg(rating), 2)                   as avg_doctor_rating,
+        round(avg(years_experience), 1)         as avg_years_experience
     from {{ ref('dim_doctors') }}
     group by specialty_id, country_id
 ),
@@ -40,15 +40,15 @@ final as (
         d.avg_years_experience,
 
         -- Ratio demanda/oferta: >1 significa más citas que médicos activos ese mes
-        safe_divide(
+        round(safe_divide(
             a.total_appointments,
             d.total_active_doctors
-        )                                       as appointments_per_doctor,
+        ), 2)                                   as appointments_per_doctor,
 
-        safe_divide(
+        round(safe_divide(
             a.no_show_appointments,
             a.total_appointments
-        )                                       as no_show_rate
+        ), 4)                                   as no_show_rate
 
     from appointments a
     left join doctors d using (specialty_id, country_id)

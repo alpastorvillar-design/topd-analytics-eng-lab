@@ -19,15 +19,15 @@ doctor_metrics as (
         countif(a.status = 'cancelled')                    as cancelled_appointments,
         countif(a.status = 'no_show')                      as no_show_appointments,
 
-        safe_divide(
+        round(safe_divide(
             countif(a.status = 'no_show'),
             count(*)
-        )                                                   as no_show_rate,
+        ), 4)                                               as no_show_rate,
 
-        safe_divide(
+        round(safe_divide(
             countif(a.status = 'completed'),
             count(*)
-        )                                                   as completion_rate,
+        ), 4)                                               as completion_rate,
 
         sum(case when a.payment_status = 'paid'
             then a.amount_cents else 0 end)                as total_revenue_cents,
