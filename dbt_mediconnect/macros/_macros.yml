@@ -1,0 +1,100 @@
+version: 2
+
+macros:
+  - name: cents_to_euros
+    description: >
+      Convierte un importe en céntimos (INT64) a euros (FLOAT64) redondeado a 2 decimales.
+      Los pagos se almacenan en céntimos para evitar errores de precisión de punto flotante.
+      Usar en marts cuando se presentan valores monetarios al negocio.
+      Fórmula: round(amount_cents / 100.0, 2).
+    arguments:
+      - name: amount_cents
+        type: string
+        description: >
+          Expresión SQL que devuelve el importe en céntimos. Puede ser un nombre de columna
+          o una expresión compuesta. Ejemplos: 'amount_cents', 'coalesce(amount_cents, 0)'.
+
+  - name: classify_patient_segment
+    description: >
+      Clasifica a un paciente en un segmento de ciclo de vida según el número de citas completadas.
+      Centraliza los umbrales de segmentación para que sean consistentes en todos los modelos.
+      Si los umbrales cambian, se modifica aquí y aplica automáticamente en dim_patients y cualquier
+      otro modelo que use la macro. Segmentos: new (0 citas), active (1-2), loyal (3-6), champion (>6).
+    arguments:
+      - name: completed_appointments
+        type: string
+        description: >
+          Expresión SQL con el conteo de citas completadas del paciente.
+          Ejemplo: 'coalesce(m.completed_appointments, 0)'.
+          Devuelve: 'new' | 'active' | 'loyal' | 'champion' | 'unknown'.
+
+  - name: safe_divide
+    description: >
+      División segura: devuelve NULL si el denominador es 0 o NULL en vez de lanzar un error.
+      Wrapper portable sobre SAFE_DIVIDE nativa de BigQuery: funciona igual en otros warehouses
+      (Snowflake, Redshift) si el proyecto migra. Se usa en todos los cálculos de ratios del proyecto.
+    arguments:
+      - name: numerator
+        type: string
+        description: "Numerador de la división. Ejemplo: 'countif(status = \"completed\")'."
+      - name: denominator
+        type: string
+        description: >
+          Denominador de la división. Si es 0 o NULL, la macro devuelve NULL en vez de error.
+          Ejemplo: 'count(*)'.
+
+  - name: generate_surrogate_key
+    description: >
+      Genera una clave surrogate como hash MD5 hexadecimal de una lista de campos concatenados con '|'.
+      Alternativa explícita a dbt_utils.generate_surrogate_key para mantener control total sobre
+      el formato del hash en este proyecto. Usa COALESCE para manejar NULLs ('NULL' como string).
+      Fórmula: TO_HEX(MD5(CONCAT(campo1 || '|' || campo2 || ...))).
+    arguments:
+      - name: field_list
+        type: list[string]
+        description: >
+          Lista de nombres de columnas a concatenar para generar el hash.
+          Ejemplo: ['appointment_id', 'patient_id'].
+          El orden importa: field_list=['a','b'] genera un hash distinto a ['b','a'].
+
+  - name: generate_schema_name
+    description: >
+      Sobrescribe el comportamiento por defecto de dbt que concatena target_schema + custom_schema.
+      Sin esta macro, dbt generaría nombres como 'mediconnect_dbt_staging' o 'dev_dbt_marts'.
+      Con ella, los modelos van exactamente al schema declarado en dbt_project.yml
+      (dbt_staging, dbt_intermediate, dbt_marts) sin ningún prefijo adicional.
+      Es un override del macro estándar de dbt — dbt lo llama automáticamente al resolver schemas.
+    arguments:
+      - name: custom_schema_name
+        type: string
+        description: >
+          Nombre del schema personalizado declarado en dbt_project.yml (ej. 'dbt_staging').
+          Si es null, usa el schema por defecto del target.
+      - name: node
+        type: any
+        description: >
+          Nodo del grafo dbt que contiene metadatos del modelo. Lo pasa dbt automáticamente,
+          no se especifica manualmente al llamar la macro.
+
+  - name: round_rate
+    description: >
+      Redondea un ratio o tasa a 4 decimales. Estandariza el formato de completion_rate,
+      no_show_rate y cancellation_rate en todos los modelos del proyecto.
+      4 decimales permite representar variaciones de 0.01% (ej. 0.1234 = 12.34%).
+    arguments:
+      - name: expr
+        type: string
+        description: >
+          Expresión SQL que devuelve el ratio a redondear.
+          Ejemplo: 'safe_divide(countif(status = "completed"), count(*))'.
+
+  - name: round_revenue
+    description: >
+      Redondea un importe monetario en euros a 2 decimales. Estandariza el formato de columnas
+      de revenue en todos los modelos del proyecto. 2 decimales es el estándar para importes en EUR.
+    arguments:
+      - name: expr
+        type: string
+        description: >
+          Expresión SQL que devuelve el importe en euros a redondear.
+          Ejemplo: 'sum(amount_eur)'.

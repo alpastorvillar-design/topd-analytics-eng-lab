@@ -1,0 +1,34 @@
+version: 2
+
+analyses:
+  - name: ad_hoc_doctor_capacity
+    description: >
+      Análisis exploratorio de capacidad y utilización de médicos.
+      Contiene 4 queries: (1) top 20 médicos por citas completadas con revenue y rating;
+      (2) ranking de revenue dentro de especialidad con QUALIFY rank <= 3;
+      (3) volumen mensual por médico en los últimos 12 meses del dataset;
+      (4) médicos inactivos con más de 90 días sin citas completadas.
+      No se materializa — compilar con 'dbt compile --select ad_hoc_doctor_capacity'
+      y ejecutar el SQL resultante en BigQuery Console.
+
+  - name: ad_hoc_no_show_drivers
+    description: >
+      Análisis exploratorio de los factores que explican los no-shows.
+      Contiene 5 queries: (1) tasa de no-show por canal × especialidad × país;
+      (2) peor canal por especialidad usando QUALIFY RANK() = 1;
+      (3) tendencia mensual de no-show con media móvil de 3 meses (AVG OVER ROWS BETWEEN 2 PRECEDING);
+      (4) correlación entre rating del médico y tasa de no-show;
+      (5) antelación de reserva vs probabilidad de no-show, agrupada en buckets de días.
+      No se materializa — compilar con 'dbt compile --select ad_hoc_no_show_drivers'
+      y ejecutar el SQL resultante en BigQuery Console.
+
+  - name: ad_hoc_retention_analysis
+    description: >
+      Análisis exploratorio de patrones de retención de pacientes.
+      Contiene 4 queries: (1) pacientes activos mensuales (MAU médico);
+      (2) pivot de cohortes M0–M5 usando MAX(IF(...)) para convertir formato largo a ancho;
+      (3) segmentación de pacientes en active/at_risk/churned anclada a MAX(appointment_date)
+      del dataset para funcionar con datos históricos sin depender de CURRENT_DATE;
+      (4) tasa de retorno a 90 días por mes de adquisición con doble CTE.
+      No se materializa — compilar con 'dbt compile --select ad_hoc_retention_analysis'
+      y ejecutar el SQL resultante en BigQuery Console.

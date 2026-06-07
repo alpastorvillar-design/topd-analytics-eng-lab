@@ -3,8 +3,10 @@ version: 2
 models:
   - name: mart_patient_retention
     description: >
-      Cohort retention analysis. One row per cohort_month × months_since_acquisition.
-      Measures what % of patients who first booked in a given month returned in subsequent months.
+      Análisis de retención por cohorte mensual. Una fila por cohort_month ×
+      months_since_acquisition. Mide qué porcentaje de pacientes que reservaron
+      su primera cita en un mes determinado volvieron en meses posteriores.
+      La cohorte se define como el mes de la primera cita completada del paciente.
     columns:
       - name: cohort_month
         description: Month of patient's first completed appointment (cohort definition).
@@ -31,8 +33,10 @@ models:
 
   - name: mart_doctor_supply_demand
     description: >
-      Supply vs demand metrics per specialty, country and month. Highlights
-      under-supplied specialties for marketplace management.
+      Métricas de oferta vs demanda por especialidad, país y mes. Identifica
+      desequilibrios en el marketplace: especialidades o geografías donde hay más
+      demanda de citas que médicos activos disponibles. appointments_per_doctor > 1
+      indica más citas que médicos activos ese mes.
     columns:
       - name: specialty_id
         description: FK to dim_specialties.
@@ -67,8 +71,9 @@ models:
 
   - name: mart_appointment_quality
     description: >
-      Quality metrics per channel × specialty × country per month.
-      Used to identify where no-shows and cancellations concentrate.
+      Métricas de calidad de citas por canal de reserva × especialidad × país × mes.
+      Identifica dónde se concentran los no-shows y cancelaciones para priorizar
+      acciones de mejora en canales o especialidades concretos.
     columns:
       - name: month
         description: Calendar month (first day of the month); partition dimension.

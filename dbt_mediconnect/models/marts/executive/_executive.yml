@@ -3,11 +3,12 @@ version: 2
 models:
   - name: agg_daily_business_kpis
     description: >
-      Daily business KPIs aggregated across all countries and specialties.
-      Includes running totals (cumulative_revenue_eur, cumulative_appointments)
-      computed with SUM OVER window functions. Feeds the executive dashboard.
-      Filters out dates with zero appointments (WHERE total_appointments > 0)
-      so the time series is contiguous on dates with real activity.
+      KPIs diarios del negocio agregados para todos los países y especialidades.
+      Combina citas, pagos y leads con FULL OUTER JOIN por fecha para no perder
+      días con actividad en solo una de las tres fuentes. Incluye totales acumulados
+      (cumulative_revenue_eur, cumulative_appointments) calculados con funciones de
+      ventana SUM OVER. Alimenta el dashboard ejecutivo. Filtra fechas sin actividad
+      (WHERE total_appointments > 0) para que la serie temporal sea continua.
     columns:
       - name: date
         description: Calendar date.
@@ -57,8 +58,9 @@ models:
 
   - name: agg_monthly_country_kpis
     description: >
-      Monthly KPIs broken down by country. Used for geographic performance
-      comparison in dashboards. Includes revenue ranking per month.
+      KPIs mensuales desglosados por país. Permite comparación geográfica de rendimiento
+      en dashboards ejecutivos. Incluye ranking de ingresos por país dentro de cada mes
+      calculado con RANK() OVER (PARTITION BY month).
     columns:
       - name: month
         description: Calendar month (first day of the month).
@@ -99,8 +101,9 @@ models:
 
   - name: agg_specialty_performance
     description: >
-      Monthly performance metrics per medical specialty. Used to identify
-      top and bottom performing specialties. Includes revenue rank within month.
+      Métricas de rendimiento mensual por especialidad médica. Permite identificar las
+      especialidades con mejor y peor rendimiento. Incluye ranking de ingresos dentro
+      del mes calculado con RANK() OVER (PARTITION BY month).
     columns:
       - name: month
         description: Calendar month (first day of the month).

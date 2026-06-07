@@ -1,0 +1,25 @@
+version: 2
+
+seeds:
+  - name: country_region_mapping
+    description: >
+      Tabla de referencia estática con el mapeo de países a regiones, divisas, idiomas
+      y zonas horarias. Se carga en BigQuery con 'dbt seed' desde el CSV en seeds/.
+      Complementa a dim_countries con información de idioma y timezone que no está
+      en los datos raw. Contiene los 8 países donde opera MediConnect.
+    columns:
+      - name: country_id
+        description: Código ISO 3166-1 alpha-2 del país (ES, GB, IT, DE, FR, MX, CO, PT).
+        data_tests:
+          - unique
+          - not_null
+      - name: country_name
+        description: Nombre completo del país en español (España, Reino Unido, Italia...).
+      - name: region
+        description: "Región geográfica de operación — Europa, Latinoamérica."
+      - name: currency
+        description: Código ISO 4217 de la divisa principal del país (EUR, GBP, MXN, COP).
+      - name: language
+        description: Código ISO 639-1 del idioma principal del país (es, en, it, de, fr, pt).
+      - name: timezone
+        description: Zona horaria en formato IANA (Europe/Madrid, America/Bogota, America/Mexico_City...).

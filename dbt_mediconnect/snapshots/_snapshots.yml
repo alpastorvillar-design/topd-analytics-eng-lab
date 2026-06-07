@@ -1,0 +1,76 @@
+version: 2
+
+snapshots:
+  - name: snap_doctors
+    description: >
+      Historial SCD Tipo 2 de la tabla de médicos. Captura cambios en is_active, rating,
+      years_experience y accepts_online_booking usando estrategia 'check' (comparación directa
+      de valores) porque la tabla raw no tiene columna updated_at fiable.
+      Cuando cambia alguna de las columnas monitoreadas, dbt cierra el registro actual
+      (rellena dbt_valid_to) y crea una nueva versión (nuevo dbt_valid_from).
+      Una fila con dbt_valid_to IS NULL representa la versión vigente hoy.
+      Dataset destino: dbt_snapshots.
+    columns:
+      - name: doctor_id
+        description: Identificador único del médico.
+      - name: full_name
+        description: Nombre completo del médico.
+      - name: specialty_id
+        description: FK a la especialidad médica del médico.
+      - name: country_id
+        description: País donde opera el médico.
+      - name: city
+        description: Ciudad donde ejerce el médico.
+      - name: created_at
+        description: Timestamp de creación del perfil del médico en la plataforma.
+      - name: is_active
+        description: Si el médico está activo actualmente. Columna monitoreada — cualquier cambio genera nueva versión.
+      - name: rating
+        description: Valoración media del médico (escala 0-5). Columna monitoreada — cualquier cambio genera nueva versión.
+      - name: years_experience
+        description: Años de experiencia profesional. Columna monitoreada — cualquier cambio genera nueva versión.
+      - name: accepts_online_booking
+        description: Si el médico acepta reservas online. Columna monitoreada — cualquier cambio genera nueva versión.
+      - name: dbt_scd_id
+        description: Hash MD5 único por versión de registro. Generado automáticamente por dbt. Clave primaria del snapshot.
+      - name: dbt_updated_at
+        description: Timestamp en que dbt detectó y procesó este registro en el último dbt snapshot.
+      - name: dbt_valid_from
+        description: Timestamp desde el que esta versión del registro es válida (cuando se insertó o cambió).
+      - name: dbt_valid_to
+        description: "Timestamp en que esta versión dejó de ser válida. NULL = versión vigente hoy."
+
+  - name: snap_patients
+    description: >
+      Historial SCD Tipo 2 de la tabla de pacientes. Captura cambios en is_active, city,
+      country_id y acquisition_channel usando estrategia 'check'.
+      Permite responder preguntas históricas como '¿cuántos pacientes activos teníamos
+      en un mes concreto?' aunque la tabla actual ya no lo refleje.
+      Dataset destino: dbt_snapshots.
+    columns:
+      - name: patient_id
+        description: Identificador único del paciente.
+      - name: full_name
+        description: Nombre completo del paciente.
+      - name: gender
+        description: Género del paciente.
+      - name: birth_date
+        description: Fecha de nacimiento del paciente.
+      - name: country_id
+        description: País de residencia. Columna monitoreada — cualquier cambio genera nueva versión.
+      - name: city
+        description: Ciudad de residencia. Columna monitoreada — cualquier cambio genera nueva versión.
+      - name: created_at
+        description: Timestamp de registro del paciente en la plataforma.
+      - name: acquisition_channel
+        description: Canal de adquisición del paciente. Columna monitoreada — cualquier cambio genera nueva versión.
+      - name: is_active
+        description: Si la cuenta del paciente está activa. Columna monitoreada — cualquier cambio genera nueva versión.
+      - name: dbt_scd_id
+        description: Hash MD5 único por versión de registro. Generado automáticamente por dbt. Clave primaria del snapshot.
+      - name: dbt_updated_at
+        description: Timestamp en que dbt detectó y procesó este registro en el último dbt snapshot.
+      - name: dbt_valid_from
+        description: Timestamp desde el que esta versión del registro es válida.
+      - name: dbt_valid_to
+        description: "Timestamp en que esta versión dejó de ser válida. NULL = versión vigente hoy."
