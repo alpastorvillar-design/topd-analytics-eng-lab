@@ -117,6 +117,8 @@ dim_patients    ─┘             │
 
 ![dbt DAG](assets/dbt_dag.png)
 
+_Full model lineage. Generic and singular tests are omitted for clarity; the `snap_doctors` and `snap_patients` snapshots have no downstream dependencies and are not shown._
+
 ---
 
 ## Technical Evidence
