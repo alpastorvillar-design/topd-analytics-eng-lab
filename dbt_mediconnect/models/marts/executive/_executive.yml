@@ -12,16 +12,16 @@ models:
     columns:
       - name: date
         description: Calendar date.
-        data_tests:
+        tests:
           - not_null
           - unique
       - name: total_appointments
         description: Total appointments booked on this date.
-        data_tests:
+        tests:
           - not_null
       - name: completed_appointments
         description: Appointments with status 'completed' on this date.
-        data_tests:
+        tests:
           - not_null
       - name: no_show_appointments
         description: Appointments where the patient did not attend on this date.
@@ -29,7 +29,7 @@ models:
         description: Appointments flagged as the patient's first ever visit (is_first_appointment = true).
       - name: daily_revenue_eur
         description: Total revenue from paid payments captured on this date, in euros.
-        data_tests:
+        tests:
           - not_null
       - name: paid_payments
         description: Count of payments with status 'paid' captured on this date.
@@ -45,13 +45,13 @@ models:
         description: converted_leads / total_leads (SAFE_DIVIDE).
       - name: cumulative_revenue_eur
         description: Running total of revenue from the earliest date to the current row (SUM OVER unbounded preceding). Must be non-negative.
-        data_tests:
+        tests:
           - dbt_utils.expression_is_true:
               arguments:
                 expression: ">= 0"
       - name: cumulative_appointments
         description: Running total of appointments from the earliest date to the current row (SUM OVER unbounded preceding). Must be non-negative.
-        data_tests:
+        tests:
           - dbt_utils.expression_is_true:
               arguments:
                 expression: ">= 0"
@@ -64,11 +64,11 @@ models:
     columns:
       - name: month
         description: Calendar month (first day of the month).
-        data_tests:
+        tests:
           - not_null
       - name: country_id
         description: FK to dim_countries.
-        data_tests:
+        tests:
           - not_null
           - relationships:
               arguments:
@@ -90,7 +90,7 @@ models:
         description: Distinct doctors with at least one appointment in this country and month.
       - name: total_revenue_eur
         description: Total revenue from paid payments in this country and month, in euros.
-        data_tests:
+        tests:
           - not_null
       - name: completion_rate
         description: completed_appointments / total_appointments (SAFE_DIVIDE).
@@ -107,11 +107,11 @@ models:
     columns:
       - name: month
         description: Calendar month (first day of the month).
-        data_tests:
+        tests:
           - not_null
       - name: specialty_id
         description: FK to dim_specialties.
-        data_tests:
+        tests:
           - not_null
           - relationships:
               arguments:
@@ -133,7 +133,7 @@ models:
         description: Distinct doctors with at least one appointment in this specialty and month.
       - name: total_revenue_eur
         description: Total revenue from paid appointments in this specialty and month, in euros.
-        data_tests:
+        tests:
           - not_null
       - name: completion_rate
         description: completed_appointments / total_appointments (SAFE_DIVIDE).

@@ -10,7 +10,7 @@ seeds:
     columns:
       - name: country_id
         description: Código ISO 3166-1 alpha-2 del país (ES, GB, IT, DE, FR, MX, CO, PT).
-        data_tests:
+        tests:
           - unique
           - not_null
       - name: country_name

@@ -23,7 +23,7 @@ sources:
         columns:
           - name: patient_id
             description: Unique patient identifier.
-            data_tests:
+            tests:
               - unique
               - not_null
           - name: full_name
@@ -34,7 +34,7 @@ sources:
             description: Date of birth.
           - name: country_id
             description: Country of residence.
-            data_tests:
+            tests:
               - not_null
           - name: city
             description: City of residence.
@@ -42,7 +42,7 @@ sources:
             description: Account registration timestamp.
           - name: acquisition_channel
             description: Channel through which the patient was acquired.
-            data_tests:
+            tests:
               - accepted_values:
                   arguments:
                     values: ['seo', 'sem', 'direct', 'referral', 'social', 'email']
@@ -54,14 +54,14 @@ sources:
         columns:
           - name: doctor_id
             description: Unique doctor identifier.
-            data_tests:
+            tests:
               - unique
               - not_null
           - name: full_name
             description: Doctor full name.
           - name: specialty_id
             description: Medical specialty identifier.
-            data_tests:
+            tests:
               - not_null
           - name: country_id
             description: Country where the doctor operates.
@@ -86,7 +86,7 @@ sources:
         columns:
           - name: specialty_id
             description: Unique specialty identifier.
-            data_tests:
+            tests:
               - unique
               - not_null
           - name: specialty_name
@@ -102,7 +102,7 @@ sources:
         columns:
           - name: country_id
             description: Unique country identifier.
-            data_tests:
+            tests:
               - unique
               - not_null
           - name: country_name
@@ -119,7 +119,7 @@ sources:
         columns:
           - name: appointment_id
             description: Unique appointment identifier.
-            data_tests:
+            tests:
               - unique
               - not_null
           - name: patient_id
@@ -134,13 +134,13 @@ sources:
             description: Last modification timestamp.
           - name: status
             description: Appointment outcome — completed, cancelled, no_show, scheduled.
-            data_tests:
+            tests:
               - accepted_values:
                   arguments:
                     values: ['completed', 'cancelled', 'no_show', 'scheduled']
           - name: channel
             description: Booking channel — web, app, phone, clinic.
-            data_tests:
+            tests:
               - accepted_values:
                   arguments:
                     values: ['web', 'app', 'phone', 'clinic']
@@ -158,7 +158,7 @@ sources:
         columns:
           - name: payment_id
             description: Unique payment identifier.
-            data_tests:
+            tests:
               - unique
               - not_null
           - name: appointment_id
@@ -177,7 +177,7 @@ sources:
             description: ISO 4217 currency code.
           - name: payment_status
             description: Payment status — paid, refunded, failed, pending.
-            data_tests:
+            tests:
               - accepted_values:
                   arguments:
                     values: ['paid', 'refunded', 'failed', 'pending']
@@ -189,7 +189,7 @@ sources:
         columns:
           - name: lead_id
             description: Unique lead identifier.
-            data_tests:
+            tests:
               - unique
               - not_null
           - name: patient_id
@@ -204,13 +204,13 @@ sources:
             description: Timestamp when the lead was captured.
           - name: lead_source
             description: Acquisition source of the lead.
-            data_tests:
+            tests:
               - accepted_values:
                   arguments:
                     values: ['seo', 'sem', 'direct', 'referral', 'social', 'email']
           - name: lead_status
             description: Current lead status — new, contacted, converted, lost.
-            data_tests:
+            tests:
               - accepted_values:
                   arguments:
                     values: ['new', 'contacted', 'converted', 'lost']

@@ -6,7 +6,7 @@ models:
     columns:
       - name: patient_id
         description: Unique patient identifier.
-        data_tests: [unique, not_null]
+        tests: [unique, not_null]
       - name: full_name
         description: Patient full name.
       - name: gender
@@ -21,7 +21,7 @@ models:
         description: Account registration timestamp (cast to TIMESTAMP).
       - name: acquisition_channel
         description: Channel through which the patient was acquired — seo, sem, direct, referral, social, email.
-        data_tests:
+        tests:
           - accepted_values:
               arguments:
                 values: ['seo', 'sem', 'direct', 'referral', 'social', 'email']
@@ -33,7 +33,7 @@ models:
     columns:
       - name: doctor_id
         description: Unique doctor identifier.
-        data_tests: [unique, not_null]
+        tests: [unique, not_null]
       - name: full_name
         description: Doctor full name.
       - name: specialty_id
@@ -58,7 +58,7 @@ models:
     columns:
       - name: specialty_id
         description: Unique specialty identifier.
-        data_tests: [unique, not_null]
+        tests: [unique, not_null]
       - name: specialty_name
         description: Full name of the medical specialty (e.g. Cardiology, Dermatology).
       - name: specialty_group
@@ -69,7 +69,7 @@ models:
     columns:
       - name: country_id
         description: Unique country identifier.
-        data_tests: [unique, not_null]
+        tests: [unique, not_null]
       - name: country_name
         description: Full country name.
       - name: region
@@ -82,13 +82,13 @@ models:
     columns:
       - name: appointment_id
         description: Unique appointment identifier.
-        data_tests: [unique, not_null]
+        tests: [unique, not_null]
       - name: patient_id
         description: FK to stg_patients.
-        data_tests: [not_null]
+        tests: [not_null]
       - name: doctor_id
         description: FK to stg_doctors.
-        data_tests: [not_null]
+        tests: [not_null]
       - name: appointment_created_at
         description: Timestamp when the appointment was booked (cast to TIMESTAMP).
       - name: appointment_start_at
@@ -97,7 +97,7 @@ models:
         description: Last modification timestamp (cast to TIMESTAMP).
       - name: status
         description: Appointment outcome — completed, cancelled, no_show, scheduled (lowercased).
-        data_tests:
+        tests:
           - accepted_values:
               arguments:
                 values: ['completed', 'cancelled', 'no_show', 'scheduled']
@@ -115,10 +115,10 @@ models:
     columns:
       - name: payment_id
         description: Unique payment identifier.
-        data_tests: [unique, not_null]
+        tests: [unique, not_null]
       - name: appointment_id
         description: FK to stg_appointments.
-        data_tests: [not_null]
+        tests: [not_null]
       - name: patient_id
         description: FK to stg_patients.
       - name: doctor_id
@@ -129,13 +129,13 @@ models:
         description: Last modification timestamp (cast to TIMESTAMP).
       - name: amount_cents
         description: Payment amount in cents stored as INT64 to avoid floating-point precision issues. 1500 = €15.00.
-        data_tests:
+        tests:
           - not_null
       - name: currency
         description: ISO 4217 currency code, uppercased.
       - name: payment_status
         description: Payment status — paid, refunded, failed, pending (lowercased).
-        data_tests:
+        tests:
           - accepted_values:
               arguments:
                 values: ['paid', 'refunded', 'failed', 'pending']
@@ -147,7 +147,7 @@ models:
     columns:
       - name: lead_id
         description: Unique lead identifier.
-        data_tests: [unique, not_null]
+        tests: [unique, not_null]
       - name: patient_id
         description: FK to stg_patients. NULL for anonymous leads.
       - name: doctor_id
@@ -162,7 +162,7 @@ models:
         description: Acquisition source of the lead — seo, sem, direct, referral, social, email (lowercased).
       - name: lead_status
         description: Current lead status — new, contacted, converted, lost (lowercased).
-        data_tests:
+        tests:
           - accepted_values:
               arguments:
                 values: ['new', 'contacted', 'converted', 'lost']
