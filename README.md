@@ -103,21 +103,40 @@ mediconnect-analytics-lab/
 **Raw sources** (`raw_mediconnect` dataset in BigQuery):
 `specialties`, `countries`, `doctors`, `patients`, `appointments`, `payments`, `leads`.
 
-**Star schema** (`dbt_marts` dataset):
+**Star schema** (`dbt_marts` dataset) — conformed dimensions shared across three fact tables, with PK/FK relationships enforced via dbt contracts:
 
+```mermaid
+erDiagram
+    dim_patients   ||--o{ fct_appointments : patient_id
+    dim_doctors    ||--o{ fct_appointments : doctor_id
+    dim_specialties ||--o{ fct_appointments : specialty_id
+    dim_countries  ||--o{ fct_appointments : country_id
+
+    fct_appointments ||--o{ fct_payments : appointment_id
+    dim_specialties  ||--o{ fct_payments : specialty_id
+    dim_countries    ||--o{ fct_payments : country_id
+
+    dim_specialties ||--o{ fct_leads : specialty_id
+    dim_countries   ||--o{ fct_leads : country_id
 ```
-dim_specialties ─┐
-dim_countries   ─┤
-dim_doctors     ─┼─> fct_appointments ─> fct_payments
-dim_patients    ─┘             │
-                               └─> fct_leads
-```
+
+- **Grain:** `fct_appointments` = one row per appointment · `fct_payments` = one row per payment · `fct_leads` = one row per lead.
+- **Conformed dimensions:** `dim_specialties` and `dim_countries` are shared by all three facts; `dim_patients` and `dim_doctors` describe the appointment grain.
 
 **dbt lineage** (sources → staging → intermediate → marts):
 
 ![dbt DAG](assets/dbt_dag.png)
 
 _Full model lineage. Generic and singular tests are omitted for clarity; the `snap_doctors` and `snap_patients` snapshots have no downstream dependencies and are not shown._
+
+<details>
+<summary>Focused view — lineage centered on <code>fct_appointments</code></summary>
+
+<br>
+
+![fct_appointments lineage](assets/dbt_dag_focused.png)
+
+</details>
 
 ---
 
